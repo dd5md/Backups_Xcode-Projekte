@@ -1,0 +1,91 @@
+import Foundation
+import Network
+import Observation
+
+/// Zustand des Antennenkopplers, wie ihn **xTune64** meldet (UDP auf 127.0.0.1:54125,
+/// ein JSON-Paket pro Sekunde). xSDR64 zeigt nur an – bedient wird in xTune64.
+@MainActor
+@Observable
+final class KopplerStatus {
+  static let shared = KopplerStatus()
+
+  /// Port, auf dem xTune64 sendet (siehe StatusSender.swift in xTune64)
+  static let port: UInt16 = 54125
+
+  nonisolated struct Paket: Decodable, Sendable {
+    var kopplerOnline: Bool
+    var bereichStartKHz: Int?
+    var bereichEndeKHz: Int?
+    var l: Int?
+    var c: Int?
+    var ht: Int?
+    var trxHz: Int?
+    var sendet: Bool
+    var vfo: String?
+  }
+
+  /// Letztes Paket von xTune64 (nil = noch keins gesehen)
+  private(set) var paket: Paket?
+  private var letztes: Date?
+  /// Wird jede Sekunde erneuert, damit „xTune64 aus“ auch ohne neues Paket auftaucht
+  private var takt = Date()
+
+  @ObservationIgnored private var listener: NWListener?
+  @ObservationIgnored private var uhr: Timer?
+
+  /// xTune64 läuft, wenn das letzte Paket nicht älter als 3 s ist
+  var xtuneLaeuft: Bool {
+    guard let letztes else { return false }
+    return takt.timeIntervalSince(letztes) <= 3
+  }
+
+  var kopplerOnline: Bool { xtuneLaeuft && (paket?.kopplerOnline ?? false) }
+
+  /// Tabellenzeile, auf der der Koppler steht, als Text („14200–14250 kHz“), sonst nil
+  var bereichText: String? {
+    guard xtuneLaeuft, let a = paket?.bereichStartKHz, let e = paket?.bereichEndeKHz else { return nil }
+    return "\(a)–\(e) kHz"
+  }
+
+  /// true = Radiofrequenz liegt NICHT im Bereich, auf dem der Koppler steht.
+  /// nil = nicht beurteilbar (xTune64 aus, Koppler offline oder keine Radiofrequenz).
+  func weichtAb(radioHz: Int?) -> Bool? {
+    guard kopplerOnline, let hz = radioHz, hz > 0 else { return nil }
+    guard let a = paket?.bereichStartKHz, let e = paket?.bereichEndeKHz else { return true }
+    let khz = hz / 1000
+    return !(khz >= a && khz < e)
+  }
+
+  func starten() {
+    guard listener == nil, let port = NWEndpoint.Port(rawValue: Self.port) else { return }
+    do {
+      let l = try NWListener(using: .udp, on: port)
+      l.newConnectionHandler = { [weak self] verbindung in
+        verbindung.start(queue: .global(qos: .utility))
+        Self.lese(verbindung, an: self)
+      }
+      l.start(queue: .global(qos: .utility))
+      listener = l
+    } catch {
+      Diagnose.log("Koppler-Status: Port \(Self.port) nicht frei – \(error.localizedDescription)")
+    }
+    uhr = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+      Task { @MainActor in KopplerStatus.shared.takt = Date() }
+    }
+  }
+
+  private nonisolated static func lese(_ v: NWConnection, an status: KopplerStatus?) {
+    v.receiveMessage { daten, _, _, fehler in
+      if let daten, let p = try? JSONDecoder().decode(Paket.self, from: daten) {
+        Task { @MainActor in status?.empfangen(p) }
+      }
+      if fehler == nil { lese(v, an: status) }
+    }
+  }
+
+  private func empfangen(_ p: Paket) {
+    paket = p
+    letztes = Date()
+    takt = Date()
+  }
+}

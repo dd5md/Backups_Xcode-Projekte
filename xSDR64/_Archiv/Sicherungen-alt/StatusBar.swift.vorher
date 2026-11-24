@@ -1,0 +1,81 @@
+import SwiftUI
+
+/// Untere Leiste: links Schalter (TNF, DVK, FDX), Mitte Radio/Station/RC-28,
+/// rechts Sendebereitschaft, Spannung, Temperatur und UTC-Uhr
+struct StatusBar: View {
+  // Vorerst nur Oberfläche – später vom Radio
+  @State private var tnfOn = false
+  @State private var dvkOn = false
+  @State private var fdxOn = false
+  private let connected = true  // Verbindung zum Radio (Puls-Symbol)
+  private let radio = "FLEX-8600M"
+  private let firmware = "v4.x"
+  private let station = "xSDR64"
+  private let rc28 = false  // RC-28 angeschlossen?
+  private let signal = 3  // Netzqualität 0…4 Balken
+  private let txReady = true
+  private let volts = 13.8
+  private let celsius = 27
+
+  /// Uhrzeit in UTC (hh:mm:ss)
+  private static let utcFormat: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "HH:mm:ss"
+    f.timeZone = TimeZone(identifier: "UTC")
+    return f
+  }()
+
+  var body: some View {
+    HStack(spacing: 14) {
+      // Puls: zeigt, dass Daten vom Radio kommen
+      Image(systemName: "waveform.path.ecg")
+        .foregroundStyle(connected ? Theme.meterValue : Theme.textDim)
+        .help(connected ? "Verbunden – Daten kommen an" : "Nicht verbunden")
+
+      HStack(spacing: 4) {
+        TagButton(title: "TNF", isOn: tnfOn) { tnfOn.toggle() }
+        TagButton(title: "DVK", isOn: dvkOn) { dvkOn.toggle() }
+        TagButton(title: "FDX", isOn: fdxOn) { fdxOn.toggle() }
+      }
+
+      Spacer(minLength: 0)
+
+      // Radio, Station, RC-28, Netzqualität
+      Text("\(radio)  \(firmware)")
+      Text("Station: \(station)")
+        .foregroundStyle(Theme.textDim)
+      lamp("RC-28", on: rc28)
+      Image(systemName: "cellularbars", variableValue: Double(signal) / 4)
+        .foregroundStyle(Theme.textDim)
+        .help("Netzqualität zum Radio")
+
+      Spacer(minLength: 0)
+
+      // Sendebereitschaft, Spannung, Temperatur, Uhr
+      lamp("TX Ready", on: txReady)
+      Text(String(format: "%.1f V", volts))
+        .monospacedDigit()
+      Text("\(celsius) °C")
+        .monospacedDigit()
+      TimelineView(.periodic(from: .now, by: 1)) { context in
+        Text("\(Self.utcFormat.string(from: context.date)) UTC")
+          .monospacedDigit()
+      }
+    }
+    .font(Schrift.klein)
+    .padding(.horizontal, 12)
+    .frame(height: 34)
+    .background(Theme.statusBar)
+  }
+
+  /// Kleine Lampe mit Beschriftung: grün = an, grau = aus
+  private func lamp(_ title: String, on: Bool) -> some View {
+    HStack(spacing: 5) {
+      Circle()
+        .fill(on ? Theme.meterValue : Theme.control)
+        .overlay(Circle().stroke(Theme.controlBorder))
+        .frame(width: 9, height: 9)
+      Text(title)
+    }
+  }
+}

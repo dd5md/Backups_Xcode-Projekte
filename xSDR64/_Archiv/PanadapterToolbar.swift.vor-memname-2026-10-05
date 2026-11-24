@@ -1,0 +1,624 @@
+import ApiPackage
+import SwiftUI
+
+/// Knopfleiste links im Panadapter (RimuSDR-Stil), senkrecht über die ganze Höhe.
+/// ◀ fährt sie ein, unten öffnet „Audio“ die Audiokette links.
+struct PanadapterToolbar: View {
+  @Binding var audioOpen: Bool  // linkes Panel (Audiokette) offen?
+  @State private var open = true  // Knopfleiste ausgefahren?
+  @State private var active: Set<String> = []  // welcher Knopf gerade sein Popup offen hat
+
+  /// Knöpfe von oben nach unten
+  private let buttons = ["+RX", "+Split", "+TNF", "Band", "BW", "ANT", "Disp", "DAXIQ", "Mem"]
+
+  var body: some View {
+    Group {
+      if open {
+        VStack(spacing: 6) {
+          // Einfahren
+          iconButton("chevron.left", help: "Knopfleiste einfahren") { open = false }
+
+          ForEach(buttons, id: \.self) { title in
+            FlatButton(title: (title == "+Split" && splitAn) ? "−Split" : title, isOn: title == "+Split" ? splitAn : active.contains(title)) {
+              if title == "+Split" { splitUmschalten() } else { toggle(title) }
+            }
+              .popover(isPresented: popupOffen(title), arrowEdge: .trailing) {
+                popup(title)
+              }
+          }
+
+          Spacer(minLength: 0)
+
+          // Audiokette ein-/ausfahren
+          FlatButton(title: "Audio", isOn: audioOpen) { audioOpen.toggle() }
+        }
+        .padding(6)
+        .frame(width: 66)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .overlay(alignment: .trailing) {
+          Rectangle().fill(Theme.border).frame(width: 1)
+        }
+        .transition(.move(edge: .leading))
+      } else {
+        // Eingefahren: nur ein schmaler Griff mit ▶
+        VStack {
+          iconButton("chevron.right", help: "Knopfleiste ausfahren") { open = true }
+          Spacer(minLength: 0)
+        }
+        .padding(.vertical, 6)
+        .frame(width: 22)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .transition(.move(edge: .leading))
+      }
+    }
+    .font(Schrift.normal)
+    .animation(.easeInOut(duration: 0.2), value: open)
+  }
+
+  /// Kleiner Knopf nur mit Symbol
+  private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(Schrift.kleinFett)
+        .foregroundStyle(Theme.textDim)
+        .frame(maxWidth: .infinity)
+        .frame(height: 22)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .focusEffectDisabled()
+    .help(help)
+  }
+
+  // MARK: - Popups der Knöpfe (Band, ANT – weitere folgen)
+
+  private static let mitPopup: Set<String> = ["Band", "ANT", "BW", "Mem", "Disp", "DAXIQ"]
+
+  /// Popup ist offen, solange der Knopf an ist; Schließen schaltet den Knopf wieder aus
+  private func popupOffen(_ title: String) -> Binding<Bool> {
+    Binding(
+      get: { Self.mitPopup.contains(title) && active.contains(title) },
+      set: { if !$0 { active.remove(title) } })
+  }
+
+  @ViewBuilder private func popup(_ title: String) -> some View {
+    switch title {
+    case "Band": BandPopup { active.remove("Band") }
+    case "ANT": AntennenPopup()
+    case "BW": BreitePopup { active.remove("BW") }
+    case "Mem": SpeicherPopup { active.remove("Mem") }
+    case "Disp": DisplayPopup()
+    case "DAXIQ": DaxIqPopup { active.remove("DAXIQ") }
+    default: EmptyView()
+    }
+  }
+
+  // MARK: - Split (A empfängt, B sendet 5 kHz höher)
+
+  private var radio: RadioVerbindung { RadioVerbindung.shared }
+
+  /// Split ist an, wenn es zwei Slices gibt und der letzte (B) TX hat
+  private var splitAn: Bool {
+    let slices = radio.eigeneSlices
+    return slices.count > 1 && (slices.last?.txEnabled ?? false)
+  }
+
+  /// Aus: neuen Slice B 5 kHz über A anlegen und TX darauf legen (A bleibt RX).
+  /// An („−Split“): TX zurück auf A und Slice B schließen. Ist B schon da, wird er nur zum Sende-Slice.
+  private func splitUmschalten() {
+    guard radio.istVerbunden else { return }
+    let slices = radio.eigeneSlices
+    guard let a = slices.first else { return }
+
+    if slices.count > 1, let b = slices.last {
+      if splitAn {
+        // Split aus: TX zurück auf A, Slice B schließen
+        a.txEnabled = true
+        radio.setze(a, "tx", true)
+        radio.sende("slice remove \(b.id)")
+      } else {
+        b.txEnabled = true
+        radio.setze(b, "tx", true)
+      }
+      return
+    }
+
+    let hz = Double(a.frequency + 5_000) / 1_000_000
+    radio.sende("slice create pan=0x\(String(a.panadapterId, radix: 16, uppercase: true)) freq=\(String(format: "%.6f", hz)) mode=\(a.mode)")
+    // Auf den neuen Slice warten (bis ca. 3 s) und TX darauf legen
+    Task { @MainActor in
+      for _ in 0..<20 {
+        try? await Task.sleep(for: .milliseconds(150))
+        let jetzt = radio.eigeneSlices
+        if jetzt.count > 1, let b = jetzt.last {
+          b.txEnabled = true
+          radio.setze(b, "tx", true)
+          return
+        }
+      }
+    }
+  }
+
+  private func toggle(_ title: String) {
+    if active.contains(title) { active.remove(title) } else { active.insert(title) }
+  }
+}
+
+// MARK: - Band-Wahl
+
+/// Bänder als Knöpfe (wie SmartSDR); wählt das Band im Panadapter – das Radio setzt
+/// Frequenz, Mode und Filter aus seinem Bandspeicher
+struct BandPopup: View {
+  var fertig: () -> Void
+  private let radio = RadioVerbindung.shared
+  private let baender = ["160", "80", "60", "40", "30", "20", "17", "15", "12", "10", "6", "GEN"]
+
+  var body: some View {
+    let s = radio.meinSlice
+    let aktuell = s.map { RadioVerbindung.band($0.frequency).replacingOccurrences(of: " m", with: "") } ?? ""
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      Text("BAND").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+      LazyVGrid(columns: Array(repeating: GridItem(.fixed(54), spacing: Abstand.xs), count: 4), spacing: Abstand.xs) {
+        ForEach(baender, id: \.self) { band in
+          Button(band) {
+            if let s { radio.sende("display pan set 0x\(String(s.panadapterId, radix: 16, uppercase: true)) band=\(band)") }
+            fertig()
+          }
+          .buttonStyle(KnopfStil(art: band == aktuell ? .an : .aus, breite: 54))
+          .disabled(s == nil)
+        }
+      }
+    }
+    .padding(Abstand.m)
+    .background(Theme.rimuBlock)
+  }
+}
+
+// MARK: - Antennen-Wahl (wie SmartSDR: Antenne, RF-Gain, WNB des Panadapters – ohne Loop A/B)
+
+struct AntennenPopup: View {
+  private let radio = RadioVerbindung.shared
+  @State private var tx = "ANT1"
+
+  var body: some View {
+    let s = radio.meinSlice
+    let pan = s.flatMap { sl in radio.api.panadapters.first { $0.id == sl.panadapterId } }
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      Text("ANTENNE").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+
+      // RX-Antenne des Panadapters als Knopfreihe
+      zeile("RX") {
+        knopfReihe(pan?.antList.nilWennLeer ?? s?.rxAntList.nilWennLeer ?? ["ANT1", "ANT2", "RX_A", "RX_B"],
+                   aktiv: pan?.rxAnt ?? s?.rxAnt ?? "") { ant in
+          if let pan { pan.rxAnt = ant; panSetze(pan, "rxant", ant) }
+        }
+      }
+      // TX-Antenne des Slice
+      zeile("TX") {
+        knopfReihe(s?.txAntList.nilWennLeer ?? ["ANT1", "ANT2"], aktiv: s?.txAnt ?? tx, rot: true) { ant in
+          if let s { s.txAnt = ant; radio.setze(s, "txant", ant) } else { tx = ant }
+        }
+      }
+
+      Furche()
+
+      // Loop A/B bewusst weggelassen: Einschleifwege für externe Geräte, vom Nutzer nicht genutzt
+      // (Radio hat das Einschalten in seiner Konfiguration abgelehnt)
+
+      // RF-Gain in den Stufen des Radios (8600M: −8 … 32 dB in 8er-Schritten)
+      zeile("RF Gain") {
+        let stufen = rfStufen(pan)
+        knopfReihe(stufen.map { "\($0) dB" }, aktiv: "\(pan?.rfGain ?? 0) dB") { text in
+          guard let pan, let wert = Int(text.replacingOccurrences(of: " dB", with: "")) else { return }
+          pan.rfGain = wert
+          panSetze(pan, "rfgain", String(wert))
+        }
+      }
+
+      // WNB des Panadapters
+      HStack(spacing: Abstand.s) {
+        Text("WNB").frame(width: 56, alignment: .leading)
+        RimuSlider(value: Binding(
+          get: { Double(pan?.wnbLevel ?? 50) },
+          set: { neu in
+            guard let pan else { return }
+            let w = Int(neu.rounded())
+            guard w != pan.wnbLevel else { return }
+            pan.wnbLevel = w
+            panSetze(pan, "wnb_level", String(w))
+          }))
+        Text("\(pan?.wnbLevel ?? 50)").font(Schrift.zahl).frame(width: 28, alignment: .trailing)
+        Toggle("", isOn: panSchalter(pan, \.wnbEnabled, "wnb")).toggleStyle(.checkbox).labelsHidden()
+      }
+      .disabled(pan == nil)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.m)
+    .frame(width: 440)
+    .background(Theme.rimuBlock)
+  }
+
+  private func zeile<Inhalt: View>(_ titel: String, @ViewBuilder _ inhalt: () -> Inhalt) -> some View {
+    HStack(spacing: Abstand.s) {
+      Text(titel).frame(width: 56, alignment: .leading)
+      inhalt()
+      Spacer(minLength: 0)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+
+  private func knopfReihe(_ werte: [String], aktiv: String, rot: Bool = false,
+                          _ wahl: @escaping (String) -> Void) -> some View {
+    HStack(spacing: Abstand.xs) {
+      ForEach(werte, id: \.self) { w in
+        Button(w) { wahl(w) }
+          .buttonStyle(KnopfStil(art: w == aktiv ? (rot ? .rot : .an) : .aus))
+      }
+    }
+  }
+
+  private func rfStufen(_ pan: Panadapter?) -> [Int] {
+    guard let pan, pan.rfGainStep > 0, pan.rfGainHigh > pan.rfGainLow else { return [-8, 0, 8, 16, 24, 32] }
+    return Array(stride(from: pan.rfGainLow, through: pan.rfGainHigh, by: pan.rfGainStep))
+  }
+
+  private func panSetze(_ pan: Panadapter, _ schluessel: String, _ wert: String) {
+    radio.sende("display pan set 0x\(String(pan.id, radix: 16, uppercase: true)) \(schluessel)=\(wert)")
+  }
+
+  private func panSchalter(_ pan: Panadapter?, _ pfad: ReferenceWritableKeyPath<Panadapter, Bool>,
+                           _ schluessel: String) -> Binding<Bool> {
+    Binding(
+      get: { pan?[keyPath: pfad] ?? false },
+      set: { neu in
+        guard let pan else { return }
+        pan[keyPath: pfad] = neu
+        panSetze(pan, schluessel, neu ? "1" : "0")
+      })
+  }
+}
+
+// MARK: - Breite des Panadapters (BW)
+
+struct BreitePopup: View {
+  var fertig: () -> Void
+  private let radio = RadioVerbindung.shared
+
+  /// (Beschriftung, Breite in Hz) – 0 = Min, -1 = Max, -2 = Band, -3 = Segment
+  private let knoepfe: [(String, Int)] = [
+    ("Min", 0), ("1 kHz", 1_000), ("2.5 kHz", 2_500),
+    ("5 kHz", 5_000), ("10 kHz", 10_000), ("20 kHz", 20_000),
+    ("25 kHz", 25_000), ("50 kHz", 50_000), ("75 kHz", 75_000),
+    ("100 kHz", 100_000), ("200 kHz", 200_000), ("300 kHz", 300_000),
+    ("500 kHz", 500_000), ("1 MHz", 1_000_000), ("5 MHz", 5_000_000),
+    ("Max", -1), ("Band", -2), ("Segment", -3),
+  ]
+
+  var body: some View {
+    let s = radio.meinSlice
+    let pan = s.flatMap { sl in radio.api.panadapters.first { $0.id == sl.panadapterId } }
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      Text("BREITE").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+      LazyVGrid(columns: Array(repeating: GridItem(.fixed(78), spacing: Abstand.xs), count: 3), spacing: Abstand.xs) {
+        ForEach(knoepfe, id: \.0) { titel, hz in
+          Button(titel) {
+            if let pan { waehle(pan, hz) }
+            fertig()
+          }
+          .buttonStyle(KnopfStil(art: pan.map { istAktiv($0, hz) } ?? false ? .an : .aus, breite: 78))
+          .disabled(pan == nil)
+        }
+      }
+    }
+    .padding(Abstand.m)
+    .background(Theme.rimuBlock)
+  }
+
+  private func istAktiv(_ pan: Panadapter, _ hz: Int) -> Bool {
+    switch hz {
+    case -2: return pan.bandZoomEnabled
+    case -3: return pan.segmentZoomEnabled
+    case 0: return pan.minBw > 0 && pan.bandwidth == pan.minBw
+    case -1: return pan.maxBw > 0 && pan.bandwidth == pan.maxBw
+    default: return abs(pan.bandwidth - hz) < max(1, hz / 50)
+    }
+  }
+
+  private func waehle(_ pan: Panadapter, _ hz: Int) {
+    let id = "0x" + String(pan.id, radix: 16, uppercase: true)
+    switch hz {
+    case -2: radio.sende("display pan set \(id) band_zoom=1")
+    case -3: radio.sende("display pan set \(id) segment_zoom=1")
+    case 0: radio.panBreite(pan, Double(pan.minBw > 0 ? pan.minBw : 1_000), sofort: true)
+    case -1: radio.panBreite(pan, Double(pan.maxBw > 0 ? pan.maxBw : 14_000_000), sofort: true)
+    default: radio.panBreite(pan, Double(hz), sofort: true)
+    }
+  }
+}
+
+// MARK: - Speicherplätze (Mem)
+
+/// Liste der Speicherplätze aus dem Radio: Klick stimmt ab („memory apply“),
+/// „+ Speichern“ legt einen neuen Platz mit der aktuellen Einstellung an („memory create“)
+struct SpeicherPopup: View {
+  var fertig: () -> Void
+  private let radio = RadioVerbindung.shared
+
+  var body: some View {
+    let liste = radio.istVerbunden ? radio.api.memories.sorted { $0.frequency < $1.frequency } : []
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      HStack {
+        Text("SPEICHER").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        Spacer()
+        Button("+ Speichern") { radio.sende("memory create") }
+          .buttonStyle(KnopfStil(art: .aus))
+          .disabled(!radio.istVerbunden)
+          .help("Aktuelle Frequenz, Mode und Filter als neuen Speicherplatz anlegen")
+      }
+      if liste.isEmpty {
+        Text(radio.istVerbunden ? "Keine Speicherplätze" : "Nicht verbunden").foregroundStyle(Theme.textDim)
+      }
+      ScrollView {
+        VStack(spacing: 1) {
+          ForEach(liste) { m in
+            Button {
+              radio.sende("memory apply \(m.id)")
+              fertig()
+            } label: {
+              HStack {
+                Text(String(format: "%.6f", Double(m.frequency) / 1_000_000)).font(Schrift.zahl)
+                  .frame(width: 96, alignment: .leading)
+                Text(m.name)
+                Spacer(minLength: 0)
+                Text(m.mode).foregroundStyle(Theme.textDim)
+              }
+              .padding(.horizontal, Abstand.s)
+              .frame(height: Mass.zeilenHoehe)
+              .background(Theme.rimuStatusFeld)
+              .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+          }
+        }
+      }
+      .frame(maxHeight: 420)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.m)
+    .frame(width: 320)
+    .background(Theme.rimuBlock)
+  }
+}
+
+// MARK: - Anzeige-Einstellungen (Disp)
+
+/// Wie SmartSDR „Disp“: Spektrum (AVG, FPS, Füllung, Weighted Average, dB-Bereich)
+/// und Wasserfall (Color Gain, Black Level, Auto Black, Tempo)
+struct DisplayPopup: View {
+  private let radio = RadioVerbindung.shared
+  /// Füllung unter der Spektrum-Linie: 0 = aus, 1 = an (weiß), 2 = Farbe – nur in xSDR64
+  @AppStorage("spektrumFuellung") private var fuellung = 1
+  @AppStorage("spektrumFuellStaerke") private var fuellStaerke = 35.0
+  @State private var hintergrund = Hintergrundbild.shared
+  @AppStorage(MausHinweis.anKey) private var mausHinweisAn = true
+  @AppStorage(MarkenEinstellung.anKey) private var memoriesAn = true
+  @AppStorage(MarkenEinstellung.groesseKey) private var memoriesSchrift = 11.0
+  @AppStorage(MarkenEinstellung.hoeheKey) private var memoriesHoehe = 15.0
+  @AppStorage(Filterflaeche.staerkeKey) private var filterStaerke = 10.0
+  @AppStorage(Filterflaeche.farbeKey) private var filterFarbe = "FFFFFF"
+
+  var body: some View {
+    let s = radio.meinSlice
+    let pan = s.flatMap { sl in radio.api.panadapters.first { $0.id == sl.panadapterId } }
+    let wf = pan.flatMap { p in radio.api.waterfalls.first { $0.panadapterId == p.id } }
+    VStack(alignment: .leading, spacing: 0) {
+     VStack(alignment: .leading, spacing: 0) {
+      Text("SPEKTRUM").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        .frame(height: Mass.zeilenHoehe)
+      regler("AVG", panZahl(pan, \.average, "average"))
+      regler("FPS", panZahl(pan, \.fps, "fps"), bereich: 1...30)
+      HStack(spacing: Abstand.s) {
+        Text("Füllung").frame(width: 96, alignment: .leading)
+        RimuPicker(selection: $fuellung, options: [0, 1, 2]) { ["Aus", "An", "Farbe"][$0] }
+      }
+      .frame(height: Mass.zeilenHoehe)
+      regler("Stärke", $fuellStaerke)
+      HStack {
+        Text("Weighted Average")
+        Spacer()
+        Toggle("", isOn: panSchalter(pan, \.weightedAverageEnabled, "weighted_average"))
+          .toggleStyle(.checkbox).labelsHidden()
+      }
+      .frame(height: Mass.zeilenHoehe)
+      regler("dB min", dbm(pan, unten: true), bereich: -160...(-60))
+      regler("dB max", dbm(pan, unten: false), bereich: -100...0)
+
+      Furche().padding(.vertical, Abstand.s)
+
+      Text("WASSERFALL").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        .frame(height: Mass.zeilenHoehe)
+      regler("Color Gain", wfZahl(wf, \.colorGain, "color_gain"))
+      regler("Black Level", wfZahl(wf, \.blackLevel, "black_level"))
+      HStack {
+        Text("Auto Black Level")
+        Spacer()
+        Toggle("", isOn: wfSchalter(wf, \.autoBlackEnabled, "auto_black"))
+          .toggleStyle(.checkbox).labelsHidden()
+      }
+      .frame(height: Mass.zeilenHoehe)
+      // Rate wie SmartSDR: der Wert geht 1:1 ans Radio (line_duration) – höher = schneller
+      regler("Rate", wfZahl(wf, \.lineDuration, "line_duration"), bereich: 60...100)  // darunter steht er praktisch
+     }
+     .disabled(pan == nil)
+
+      Furche().padding(.vertical, Abstand.s)
+
+      HStack {
+        Text("Frequenz an der Maus")
+        Spacer()
+        Toggle("", isOn: $mausHinweisAn).toggleStyle(.checkbox).labelsHidden()
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      Furche().padding(.vertical, Abstand.s)
+
+      // Speicherplätze im Spektrum
+      HStack {
+        Text("MEMORIES").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        Spacer()
+        Toggle("", isOn: $memoriesAn).toggleStyle(.checkbox).labelsHidden()
+      }
+      .frame(height: Mass.zeilenHoehe)
+      regler("Schrift", $memoriesSchrift, bereich: 8...18)
+        .disabled(!memoriesAn)
+      regler("Höhe", $memoriesHoehe, bereich: 3...90)
+        .disabled(!memoriesAn)
+
+      Furche().padding(.vertical, Abstand.s)
+
+      // Helle Fläche des Filters (Durchlassbereich) – Stärke und Farbe
+      Text("FILTERFLÄCHE").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        .frame(height: Mass.zeilenHoehe)
+      regler("Stärke", $filterStaerke, bereich: 0...40)
+      HStack(spacing: Abstand.s) {
+        Text("Farbe").frame(width: 96, alignment: .leading)
+        ColorPicker("", selection: Binding(get: { Filterflaeche.farbe(filterFarbe) },
+                                           set: { filterFarbe = Filterflaeche.hex($0) }),
+                    supportsOpacity: false)
+          .labelsHidden()
+        Spacer()
+        Button("Standard") { filterFarbe = "FFFFFF"; filterStaerke = 10 }.buttonStyle(KnopfStil())
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      Furche().padding(.vertical, Abstand.s)
+
+      // Eigenes Hintergrundbild im Spektrum – geht auch ohne Radio
+      Text("HINTERGRUNDBILD").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+        .frame(height: Mass.zeilenHoehe)
+      HStack(spacing: Abstand.s) {
+        Button("Laden …") { hintergrund.laden() }.buttonStyle(KnopfStil())
+        Button("Entfernen") { hintergrund.entfernen() }.buttonStyle(KnopfStil())
+          .disabled(hintergrund.bild == nil)
+        Spacer()
+        Text(hintergrund.bild == nil ? "keins" : "aktiv").font(Schrift.klein).foregroundStyle(Theme.textDim)
+      }
+      .frame(height: Mass.zeilenHoehe)
+      regler("Abdunkeln", $hintergrund.abdunkeln)
+        .disabled(hintergrund.bild == nil)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.m)
+    .frame(width: 320)
+    .background(Theme.rimuBlock)
+  }
+
+  // MARK: Bausteine
+
+  private func regler(_ titel: String, _ wert: Binding<Double>, bereich: ClosedRange<Double> = 0...100) -> some View {
+    HStack(spacing: Abstand.s) {
+      Text(titel).frame(width: 96, alignment: .leading)
+      Slider(value: wert, in: bereich).controlSize(.small)
+      Text("\(Int(wert.wrappedValue.rounded()))").font(Schrift.zahl).frame(width: 36, alignment: .trailing)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+
+  private func hex(_ id: UInt32) -> String { "0x" + String(id, radix: 16, uppercase: true) }
+
+  private func panSetze(_ pan: Panadapter, _ k: String, _ v: String) { radio.sende("display pan set \(hex(pan.id)) \(k)=\(v)") }
+  private func wfSetze(_ wf: Waterfall, _ k: String, _ v: String) { radio.sende("display panafall set \(hex(wf.id)) \(k)=\(v)") }
+
+  private func panZahl(_ pan: Panadapter?, _ pfad: ReferenceWritableKeyPath<Panadapter, Int>, _ k: String) -> Binding<Double> {
+    Binding(
+      get: { Double(pan?[keyPath: pfad] ?? 0) },
+      set: { neu in
+        guard let pan else { return }
+        let w = Int(neu.rounded())
+        guard w != pan[keyPath: pfad] else { return }
+        pan[keyPath: pfad] = w
+        panSetze(pan, k, String(w))
+      })
+  }
+
+  private func panSchalter(_ pan: Panadapter?, _ pfad: ReferenceWritableKeyPath<Panadapter, Bool>, _ k: String) -> Binding<Bool> {
+    Binding(
+      get: { pan?[keyPath: pfad] ?? false },
+      set: { neu in
+        guard let pan else { return }
+        pan[keyPath: pfad] = neu
+        panSetze(pan, k, neu ? "1" : "0")
+      })
+  }
+
+  private func wfZahl(_ wf: Waterfall?, _ pfad: ReferenceWritableKeyPath<Waterfall, Int>, _ k: String) -> Binding<Double> {
+    Binding(
+      get: { Double(wf?[keyPath: pfad] ?? 0) },
+      set: { neu in
+        guard let wf else { return }
+        let w = Int(neu.rounded())
+        guard w != wf[keyPath: pfad] else { return }
+        wf[keyPath: pfad] = w
+        wfSetze(wf, k, String(w))
+      })
+  }
+
+  private func wfSchalter(_ wf: Waterfall?, _ pfad: ReferenceWritableKeyPath<Waterfall, Bool>, _ k: String) -> Binding<Bool> {
+    Binding(
+      get: { wf?[keyPath: pfad] ?? false },
+      set: { neu in
+        guard let wf else { return }
+        wf[keyPath: pfad] = neu
+        wfSetze(wf, k, neu ? "1" : "0")
+      })
+  }
+
+  /// dB-Bereich des Spektrums (Radio: min_dbm / max_dbm)
+  private func dbm(_ pan: Panadapter?, unten: Bool) -> Binding<Double> {
+    Binding(
+      get: { Double(unten ? (pan?.minDbm ?? -135) : (pan?.maxDbm ?? -40)) },
+      set: { neu in
+        guard let pan else { return }
+        let w = neu.rounded()
+        if unten {
+          guard w < Double(pan.maxDbm) - 10 else { return }
+          pan.minDbm = CGFloat(w)
+          panSetze(pan, "min_dbm", String(format: "%.1f", w))
+        } else {
+          guard w > Double(pan.minDbm) + 10 else { return }
+          pan.maxDbm = CGFloat(w)
+          panSetze(pan, "max_dbm", String(format: "%.1f", w))
+        }
+      })
+  }
+}
+
+// MARK: - DAX IQ (IQ-Daten des Panadapters an andere Programme)
+
+struct DaxIqPopup: View {
+  var fertig: () -> Void
+  private let radio = RadioVerbindung.shared
+
+  var body: some View {
+    let s = radio.meinSlice
+    let pan = s.flatMap { sl in radio.api.panadapters.first { $0.id == sl.panadapterId } }
+    VStack(alignment: .leading, spacing: Abstand.xs) {
+      Text("DAXIQ KANAL").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+      ForEach(0...4, id: \.self) { k in
+        Button(k == 0 ? "Off" : "Kanal \(k)") {
+          if let pan {
+            pan.daxIqChannel = k
+            radio.sende("display pan set 0x\(String(pan.id, radix: 16, uppercase: true)) daxiq_channel=\(k)")
+          }
+          fertig()
+        }
+        .buttonStyle(KnopfStil(art: (pan?.daxIqChannel ?? 0) == k ? .an : .aus, breite: 110))
+        .disabled(pan == nil)
+      }
+    }
+    .padding(Abstand.m)
+    .background(Theme.rimuBlock)
+  }
+}

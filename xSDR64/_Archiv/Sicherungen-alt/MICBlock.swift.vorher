@@ -1,0 +1,72 @@
+import SwiftUI
+
+/// Inhalt des MIC-Blocks: Pegel, Mic-Profil, Eingang + Gain, Monitor, Audiokette
+/// 01.10.2026: auf RimuSDR-Stil umgestellt (Design-Vorgabe)
+struct MICBlock: View {
+  /// Die Mikrofon-Eingänge – Reihenfolge wie in SmartSDR
+  enum MicInput: String, CaseIterable, Identifiable {
+    case mic = "MIC"
+    case bal = "BAL"
+    case line = "LINE"
+    case acc = "ACC"  // Zubehörbuchse am Flex
+    case mac = "Mac"  // Mikrofon am Mac (USB-Mikrofon / Audio-Interface)
+    var id: String { rawValue }
+  }
+
+  // Vorerst nur in der Oberfläche – später kommen die Werte vom Radio
+  @State private var profile = "Default"  // die Profil-Liste liefert später das Radio
+  @State private var input: MicInput = .bal
+  @State private var micGain = 45.0
+  @State private var monOn = false
+  @State private var monLevel = 44.0
+  @State private var chainOn = false
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Mikrofon-Pegel −40 … 0 dB auf dunklem Grund, rot kurz vor 0
+      RimuMeter(marks: [
+        .init(pos: 0, text: "-40dB"),
+        .init(pos: 0.25, text: "-30"),
+        .init(pos: 0.5, text: "Level"),
+        .init(pos: 0.75, text: "-10"),
+        .init(pos: 1, text: "0", red: true),
+      ], redFrom: 0.95, value: Double(((MessModell.shared.micPegel ?? -40) + 40) / 40),
+         barColor: Theme.meterValue, ticks: 8)
+      .padding(Abstand.s)
+      .background(Theme.rimuMeter)
+
+      VStack(spacing: 0) {
+        // Mic-Profil
+        HStack(spacing: Abstand.s) {
+          Text("Mic Profil:")
+            .font(Schrift.normal)
+            .frame(width: 78, alignment: .leading)
+          RimuPicker(selection: $profile, options: ["Default"]) { $0 }
+        }
+        .frame(height: Mass.zeilenHoehe)
+
+        // Eingang + Gain
+        ElementReglerZeile(value: $micGain) {
+          RimuPicker(selection: $input, options: MicInput.allCases) { $0.rawValue }
+        }
+
+        // Monitor
+        ElementReglerZeile(value: $monLevel) {
+          Button("MON") { monOn.toggle() }
+            .buttonStyle(KnopfStil(art: monOn ? .an : .aus, breite: 78))
+        }
+
+        // Audiokette (schaltet später automatisch die Sendequelle auf DAX)
+        HStack {
+          Button("Audiokette") { chainOn.toggle() }
+            .buttonStyle(KnopfStil(art: chainOn ? .an : .aus, breite: 110))
+          Spacer(minLength: 0)
+        }
+        .frame(height: Mass.zeilenHoehe)
+        .padding(.top, Abstand.xs)
+      }
+      .padding(Abstand.s)
+    }
+    .foregroundStyle(Theme.text)
+  }
+}

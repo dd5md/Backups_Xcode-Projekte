@@ -1,0 +1,107 @@
+import ApiPackage
+import SwiftUI
+
+/// Inhalt des MIC-Blocks: Pegel, Mic-Profil, Eingang + Gain, Monitor, Audiokette
+/// 01.10.2026: auf RimuSDR-Stil umgestellt (Design-Vorgabe)
+struct MICBlock: View {
+  /// Die Mikrofon-Eingänge – Reihenfolge wie in SmartSDR
+  enum MicInput: String, CaseIterable, Identifiable {
+    case mic = "MIC"
+    case bal = "BAL"
+    case line = "LINE"
+    case acc = "ACC"  // Zubehörbuchse am Flex
+    case mac = "Mac"  // Mikrofon am Mac (USB-Mikrofon / Audio-Interface)
+    var id: String { rawValue }
+    /// Name im Radio (Mac = „PC“, der Ton kommt dann über das Netz)
+    var radioName: String { self == .mac ? "PC" : rawValue }
+  }
+
+  private let radio = RadioVerbindung.shared
+
+
+  /// Eingang: Radio meldet mic_selection (MIC, BAL, LINE, ACC, PC)
+  private var eingangWahl: Binding<MicInput> {
+    Binding(
+      get: {
+        guard radio.istVerbunden else { return input }
+        return MicInput.allCases.first { $0.radioName == radio.api.transmit.micSelection.uppercased() } ?? input
+      },
+      set: { neu in
+        if radio.istVerbunden {
+          radio.api.transmit.micSelection = neu.radioName
+          radio.sende("mic input \(neu.radioName)")
+        } else {
+          input = neu
+        }
+      })
+  }
+
+  // Ersatzwerte, solange kein Radio verbunden ist – verbunden kommen alle Werte vom Radio
+  @State private var profile = "Default"
+  @State private var input: MicInput = .bal
+  @State private var micGain = 45.0
+  @State private var monOn = false
+  @State private var monLevel = 44.0
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Mikrofon-Pegel −40 … +5 dB auf dunklem Grund, rot ab 0 dB, gelb ab −10 dB (Zonen wie AetherSDR)
+      RimuMeter(marks: [
+        .init(pos: 0, text: "-40dB"),
+        .init(pos: 10.0 / 45, text: "-30"),
+        .init(pos: 0.5, text: "Level"),
+        .init(pos: 30.0 / 45, text: "-10", yellow: true),
+        .init(pos: 40.0 / 45, text: "0", red: true),
+      ], redFrom: 40.0 / 45, value: Double(((MessModell.shared.micPegel ?? -40) + 40) / 45),
+         // Strich = echter Spitzenpegel (micpeak), Balken = Mittelwert – wie SmartSDR;
+         // der Strich zeigt direkt den Wert vom Radio (kein eigenes Halten, wie AetherSDR)
+         spitze: MessModell.shared.micSpitze.map { Double(($0 + 40) / 45) },
+         barColor: Theme.meterValue, ticks: 9, spitzeHalten: false, yellowFrom: 30.0 / 45)
+      // Zahlen zur Kontrolle (Maus über die Anzeige halten)
+      .help(String(format: "Mittel %.1f dB · Spitze %.1f dB",
+                   MessModell.shared.micPegel ?? -99, MessModell.shared.micSpitze ?? -99))
+      .padding(Abstand.s)
+      .background(Theme.rimuMeter)
+
+      VStack(spacing: 0) {
+        // Mic-Profil
+        HStack(spacing: Abstand.s) {
+          Text("Mic Profil:")
+            .font(Schrift.normal)
+            .frame(width: 78, alignment: .leading)
+          RimuPicker(selection: radio.profilWahl("mic", $profile), options: radio.profilListe("mic")) { $0 }
+        }
+        .frame(height: Mass.zeilenHoehe)
+
+        // Eingang + Gain
+        ElementReglerZeile(value: radio.txRegler($micGain, \.micLevel, "transmit set miclevel")) {
+          RimuPicker(selection: eingangWahl, options: MicInput.allCases) { $0.rawValue }
+        }
+
+        // Monitor (eigene Stimme mithören)
+        let mon = radio.txSchalter($monOn, \.txMonitorEnabled) { "transmit set mon=\($0 ? 1 : 0)" }
+        ElementReglerZeile(value: radio.txRegler($monLevel, \.ssbMonitorGain, "transmit set mon_gain_sb")) {
+          Button("MON") { mon.wrappedValue.toggle() }
+            .buttonStyle(KnopfStil(art: mon.wrappedValue ? .an : .aus, breite: 78))
+        }
+
+        // Audiokette starten / stoppen – derselbe Knopf wie „Start/Stop“ im linken Kettenpanel
+        // (Netzwerk-Audio ohne Audio-Interface steht jetzt im Zahnrad-Menü oben links)
+        let host = AudioWelt.shared.host
+        HStack {
+          Button("Audiokette") { AudioWelt.shared.kettenKnopf() }
+          .buttonStyle(KnopfStil(art: host.isRunning ? .gruen : .aus, breite: 110))
+          .help(host.isRunning ? "Audiokette läuft – klicken zum Stoppen" : "Audiokette starten")
+          if TxNetz.shared.aktiv || MicNetz.shared.aktiv {
+            Text("über Netzwerk").font(Schrift.klein).foregroundStyle(Theme.textDim)
+          }
+          Spacer(minLength: 0)
+        }
+        .frame(height: Mass.zeilenHoehe)
+        .padding(.top, Abstand.xs)
+      }
+      .padding(Abstand.s)
+    }
+    .foregroundStyle(Theme.text)
+  }
+}

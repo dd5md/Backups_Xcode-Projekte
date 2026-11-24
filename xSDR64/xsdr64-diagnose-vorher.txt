@@ -1,0 +1,35 @@
+xSDR64 Diagnose
+[1:29:26] Ketten geladen: 1, eingeschaltet: DD5MD
+[1:29:26] RC-28 angesteckt
+[1:29:27] Radio-Suche: Port 4992 offen
+[1:29:27] Radio-Suche: automatisches Verbinden ist ausgeschaltet
+[1:29:27] Plugin geladen: TB Equalizer Pro (ToneBoosters) – geschützt (eigener Prozess)
+[1:29:27] Plugin geladen: TB_Barricade_v4 (ToneBoosters) – geschützt (eigener Prozess)
+[1:29:27] Plugin geladen: xGain64 (DD5MD) – geschützt (eigener Prozess)
+[1:29:27] Netzteil-Messung: Arduino antwortet (14.16 V)
+[1:29:27] Plugin geladen: TB Equalizer Pro (ToneBoosters) – geschützt (eigener Prozess)
+[1:29:27] Plugin geladen: MJUC (Klanghelm) – geschützt (eigener Prozess)
+[1:29:28] Audiokette lief beim letzten Mal – starte sie wieder
+[1:29:28] ——— Engine-Start (Versuch 1), Kette: DD5MD ———
+[1:29:28] Ausgabegerät: Fireface UCX II (24259086) id=138 uid=RMEUSBDevice-130-24259086 ein=8 aus=8
+[1:29:28] Einstellung: 48000.0 Hz, Puffer 128, Eingänge [4], Ausgänge [2], eingerichtet=true, stumm=false
+[1:29:28] Mikrofon-Erlaubnis: 3 (3 = erlaubt)
+[1:29:28] Vorher: Eingang-Gerät 181, Ausgang-Gerät 181
+[1:29:28] Nachher: Eingang-Gerät 138, Ausgang-Gerät 138
+[1:29:28] Eingang laut Engine: <AVAudioFormat 0x753dce3980:  1 ch,  48000 Hz, Float32>, Hardware: <AVAudioFormat 0x753dce3b10:  8 ch,  48000 Hz, Float32, deinterleaved>
+[1:29:28] Ausgang Hardware-Format: <AVAudioFormat 0x753dce3f20:  8 ch,  48000 Hz, Float32, deinterleaved>
+[1:29:28] Eingangsformat (vorgegeben): <AVAudioFormat 0x753dce37f0:  8 ch,  48000 Hz, Float32, deinterleaved>
+[1:29:28] Kette: TB Equalizer Pro an
+[1:29:28] Kette: MJUC an
+[1:29:28] Kette: TB Equalizer Pro an
+[1:29:28] Kette: xGain64 an
+[1:29:28] Kette: TB_Barricade_v4 an
+[1:29:28] Mixer→Ausgang Format: <AVAudioFormat 0x753dce3e80:  2 ch,  48000 Hz, Float32, deinterleaved>
+[1:29:28] Kanal-Zuordnung Ausgang [-1, -1, 0, -1, -1, -1, -1, -1] → Status 0
+[1:29:28] Engine läuft: true
+[1:29:30] Nach 2.0 s: Eingang-Aufrufe 755 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 755 (je 128 Samples), erfolgreich 754, Aussetzer 1, Mix-Spitze 8.261204e-05, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[1:29:33] Nach 5.0 s: Eingang-Aufrufe 1879 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 1879 (je 128 Samples), erfolgreich 1878, Aussetzer 1, Mix-Spitze 2.7418137e-06, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[1:29:35] App: jetzt im Vordergrund
+[1:29:35] App: jetzt im Vordergrund
+[1:29:37] Programm beendet (sauber, ohne Plugin-Abräumen) – Auslöser: Tastatur (⌘q)
+[5:00:51] Netzwerk: ok [LAN en5,en5]

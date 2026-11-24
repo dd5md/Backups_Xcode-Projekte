@@ -1,0 +1,256 @@
+import AppKit
+import ApiPackage
+import SwiftUI
+
+/// Das Hauptfenster: oben Leiste, Mitte Audiokette | Spektrum | Seitenleiste, unten Statusleiste
+struct ContentView: View {
+    /// Merker wie "setupOffen" in xTune64: ist das jeweilige Panel ausgefahren?
+    @State private var leftOpen = false      // Audiokette links, startet eingefahren
+    @State private var rightOpen = true      // Seitenleiste rechts, startet ausgefahren
+    /// Audiokette (aus xHost64) – lebt so lange wie das Fenster
+    private let host = AudioWelt.shared.host
+    private let catalog = AudioWelt.shared.catalog
+
+    var body: some View {
+        VStack(spacing: 0) {
+            TopBar()
+            HStack(spacing: 6) {
+                if leftOpen {
+                    AudioPanel(host: host, catalog: catalog)
+                        .transition(.move(edge: .leading))    // gleitet nach links raus
+                }
+                EdgeHandle(side: .left, isOpen: $leftOpen)
+                PanadapterArea(audioOpen: $leftOpen)
+                EdgeHandle(side: .right, isOpen: $rightOpen)
+                if rightOpen {
+                    Sidebar()
+                        .transition(.move(edge: .trailing))   // gleitet nach rechts raus
+                }
+            }
+            .padding(6)
+            StatusBar()
+        }
+        .background(Theme.window)
+        .foregroundStyle(Theme.text)
+        .animation(.easeInOut(duration: 0.25), value: leftOpen)
+        .animation(.easeInOut(duration: 0.25), value: rightOpen)
+        .onAppear {
+            host.mitAppVerbinden()   // Plugin-Fenster und Beenden – siehe Audiokette/AudioHost+App.swift
+            DispatchQueue.main.async { FensterLage.anmelden() }   // Fensterlage vom letzten Mal
+            RadioVerbindung.shared.starten()   // Radio im Netz suchen, letztes Radio verbinden
+            RC28.shared.starten()   // ICOM RC-28 Drehknopf (USB)
+            KettenZuordnung.shared.beobachten()   // Mic-Profil wechselt → zugeordnete Audiokette
+            SliceKopplung.shared.beobachten()     // Slice-Optionen: TX ↔ aktiv, Synchronisation
+            // Audiokette wieder einschalten, wenn sie beim Beenden lief (kurz warten, bis Ketten geladen sind)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { AudioWelt.shared.wieZuletztStarten() }
+        }
+    }
+}
+
+// MARK: - Griff am Rand zum Ein-/Ausfahren eines Panels
+struct EdgeHandle: View {
+    enum Side { case left, right }
+
+    let side: Side
+    @Binding var isOpen: Bool
+    @State private var hovering = false      // ist die Maus gerade über dem Griff?
+
+    /// Der Pfeil zeigt immer in die Richtung, in die sich das Panel bewegt
+    private var symbol: String {
+        switch side {
+        case .left:  return isOpen ? "chevron.left"  : "chevron.right"
+        case .right: return isOpen ? "chevron.right" : "chevron.left"
+        }
+    }
+
+    var body: some View {
+        Button { isOpen.toggle() } label: {
+            Image(systemName: symbol)
+                .font(Schrift.kleinFett)
+                .frame(width: 16)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())   // ganze Fläche ist klickbar
+        }
+        .buttonStyle(.plain)
+        .background(hovering ? Theme.border : Theme.bar)   // heller bei Maus darüber
+        .overlay(Rectangle().stroke(Theme.border))
+        .onHover { hovering = $0 }
+        .focusEffectDisabled()
+        .help(isOpen ? "Einfahren" : "Ausfahren")
+    }
+}
+
+// MARK: - Panadapter + Wasserfall
+struct PanadapterArea: View {
+    @Binding var audioOpen: Bool     // für den Audio-Knopf unten in der Knopfleiste
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Knopfleiste links, über die ganze Höhe
+            PanadapterToolbar(audioOpen: $audioOpen)
+            // Alle eigenen Panadapter nebeneinander (z. B. Full Duplex: links und rechts)
+            let pans = Self.angezeigtePans
+            HStack(spacing: pans.count > 1 ? 6 : 0) {
+                if pans.isEmpty {
+                    PanEinzel(pan: nil, mehrere: false)
+                } else {
+                    ForEach(pans, id: \.id) { pan in PanEinzel(pan: pan, mehrere: pans.count > 1) }
+                }
+            }
+            .background(Color.black)   // deutlicher Spalt zwischen den Panadaptern
+        }
+        .clipped()
+        .border(Theme.border)
+    }
+
+    /// Eigene Panadapter, von links nach rechts in der Reihenfolge ihres Anlegens
+    @MainActor static var angezeigtePans: [Panadapter] {
+        let radio = RadioVerbindung.shared
+        guard radio.istVerbunden else { return [] }
+        return radio.api.panadapters
+            .filter { $0.clientHandle == radio.api.connectionHandle }
+            .sorted { $0.id < $1.id }
+    }
+
+    /// Linke Kante der Flagge: normal links an der Linie, am linken Rand rechts neben dem Filter
+    static func flaggenX(linie: CGFloat, filterEnde: CGFloat, breite: CGFloat) -> CGFloat {
+        let links = linie - SliceFlag.width
+        if links >= 0 { return links }
+        let rechts = max(linie, filterEnde) + 1
+        return rechts + SliceFlag.width <= breite ? rechts : max(0, links)
+    }
+
+    /// Wo Slice-Linie und Filterfläche liegen (in Punkten von links)
+    static func sliceLage(_ slice: Slice?, _ pan: Panadapter?, breite: CGFloat)
+        -> (linie: CGFloat, filterAnfang: CGFloat, breite: CGFloat) {
+        guard let slice, let pan, pan.bandwidth > 0 else {
+            return (breite * 0.45, breite * 0.45, breite * 0.05)
+        }
+        let links = Double(pan.center) - Double(pan.bandwidth) / 2
+        func x(_ hz: Double) -> CGFloat { CGFloat((hz - links) / Double(pan.bandwidth)) * breite }
+        let f = Double(slice.frequency)
+        let a = x(f + Double(slice.filterLow))
+        let b = x(f + Double(slice.filterHigh))
+        return (x(f), min(a, b), abs(b - a))
+    }
+}
+
+/// Ein Panadapter mit Spektrum, Frequenzleiste und Wasserfall.
+/// Die Flagge steht nur am aktiven Slice; in den anderen Panadaptern zeigt ein Schildchen den Buchstaben.
+struct PanEinzel: View {
+    let pan: Panadapter?
+    /// Mehrere Panadapter nebeneinander: dunkle dB-Skala rechts und Rahmen um den aktiven (wie SmartSDR)
+    var mehrere = false
+    static let skalenBreite: CGFloat = 46
+    @AppStorage(Filterflaeche.staerkeKey) private var filterStaerke = 10.0
+    @AppStorage(Filterflaeche.farbeKey) private var filterFarbe = "FFFFFF"
+    @AppStorage("panAnteil") private var panAnteil = 0.6   // Anteil des Spektrums an der Höhe
+
+    var body: some View {
+        GeometryReader { geo in
+            let radio = RadioVerbindung.shared
+            let aktiv = radio.meinSlice
+            // Slice dieses Panadapters: der aktive, falls er hier liegt, sonst der erste hier
+            let slice: Slice? = pan == nil ? aktiv
+                : (aktiv?.panadapterId == pan!.id ? aktiv
+                   : radio.eigeneSlices.first { $0.panadapterId == pan!.id })
+            let istAktiv = pan == nil || aktiv?.panadapterId == pan?.id
+            let lage = PanadapterArea.sliceLage(slice, pan, breite: geo.size.width)
+            let sliceX = lage.linie
+            let passband = lage.breite
+            let spektrumHoehe = (geo.size.height - FrequenzLeiste.hoehe) * panAnteil
+            ZStack(alignment: .topLeading) {
+                VStack(spacing: 0) {
+                    SpektrumHintergrund()   // Grundfarbe + eigenes Bild (Disp → Hintergrundbild)
+                        .frame(height: spektrumHoehe)
+                        .overlay(alignment: .trailing) {
+                            // dunkler Streifen hinter der dB-Skala (wie SmartSDR)
+                            if mehrere { Color.black.opacity(0.6).frame(width: Self.skalenBreite) }
+                        }
+                        .overlay(SpektrumRaster(pan: pan))
+                        .overlay(SpektrumAnsicht(pan: pan))
+                        .overlay(SpektrumMarken(pan: pan))   // Memories/Spots
+                    Color.clear
+                        .frame(height: FrequenzLeiste.hoehe)   // Platz für die Frequenzleiste
+                    WasserfallAnsicht(
+                        pan: pan,
+                        wasserfall: pan.flatMap { p in radio.api.waterfalls.first { $0.panadapterId == p.id } })
+                        .overlay(alignment: .trailing) {
+                            if mehrere { Color.black.opacity(0.6).frame(width: Self.skalenBreite).allowsHitTesting(false) }
+                        }
+                }
+                // Klick und Mausrad zum Abstimmen (liegt unter Linie, Filter und Flagge)
+                MausAbstimmung(slice: slice, pan: pan)
+                // Frequenzleiste – liegt über der Maus-Fläche, damit man sie ziehen kann
+                FrequenzLeiste(pan: pan, anteil: $panAnteil,
+                               gesamtHoehe: geo.size.height - FrequenzLeiste.hoehe)
+                    .offset(y: spektrumHoehe)
+                // weitere Slices im selben Panadapter (z. B. B neben A): Filter, Linie, Buchstabe
+                if let pan {
+                    ForEach(radio.eigeneSlices.filter { $0.panadapterId == pan.id && $0.id != slice?.id }, id: \.id) { s in
+                        let l = PanadapterArea.sliceLage(s, pan, breite: geo.size.width)
+                        Rectangle()
+                            .fill(Filterflaeche.farbe(filterFarbe).opacity(filterStaerke / 200))
+                            .frame(width: l.breite, height: geo.size.height)
+                            .offset(x: l.filterAnfang)
+                            .allowsHitTesting(false)
+                        Rectangle()
+                            .fill(Color.yellow.opacity(0.5))
+                            .frame(width: 1, height: geo.size.height)
+                            .offset(x: l.linie)
+                            .allowsHitTesting(false)
+                        Button { radio.sende("slice set \(s.id) active=1") } label: {
+                            Text(s.sliceLetter ?? "?").font(Schrift.kleinFett)
+                                .padding(.horizontal, 4).padding(.vertical, 1)
+                                .background(RoundedRectangle(cornerRadius: 3).fill(s.txEnabled ? Theme.txOn : Theme.accent))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Klicken: Slice \(s.sliceLetter ?? "") aktiv machen")
+                        .offset(x: l.linie + 3, y: geo.size.height * 0.04)
+                    }
+                }
+                if slice != nil || pan == nil {
+                    // Durchlassbereich des Filters (USB: rechts der Linie)
+                    Rectangle()
+                        .fill(Filterflaeche.farbe(filterFarbe).opacity(filterStaerke / 100))
+                        .frame(width: passband, height: geo.size.height)
+                        .offset(x: lage.filterAnfang)
+                        .allowsHitTesting(false)
+                    // Slice-Linie
+                    Rectangle()
+                        .fill(Color.yellow.opacity(istAktiv ? 1 : 0.6))
+                        .frame(width: 1, height: geo.size.height)
+                        .offset(x: sliceX)
+                        .allowsHitTesting(false)
+                }
+                if istAktiv {
+                    // Flagge hängt links an der Linie – reicht der Platz links nicht,
+                    // wechselt sie wie bei SmartSDR auf die andere Seite (rechts der Filterfläche)
+                    SliceFlag()
+                        .offset(x: PanadapterArea.flaggenX(linie: sliceX, filterEnde: lage.filterAnfang + lage.breite,
+                                                           breite: geo.size.width), y: 16)
+                } else if let slice {
+                    // anderer Panadapter: volle Flagge, etwas blasser – Klick macht den Slice aktiv
+                    SliceFlag(fuer: slice)
+                        .offset(x: PanadapterArea.flaggenX(linie: sliceX, filterEnde: lage.filterAnfang + lage.breite,
+                                                           breite: geo.size.width), y: 16)
+                }
+                // Frequenz an der Maus (Hinweisfenster) – ganz oben, fängt keine Klicks ab
+                MausHinweisAnzeige(slice: slice, panId: pan?.id, groesse: geo.size)
+            }
+            // Rahmen: der aktive Panadapter (mit der Flagge) blau, der andere dezent
+            .overlay {
+                if mehrere {
+                    Rectangle()
+                        .stroke(istAktiv ? Theme.tabOnBorder : Theme.border, lineWidth: istAktiv ? 2 : 1)
+                        .allowsHitTesting(false)
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+        .frame(width: 1440, height: 900)
+}

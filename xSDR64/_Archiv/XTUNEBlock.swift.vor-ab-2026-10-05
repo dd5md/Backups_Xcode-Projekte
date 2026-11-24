@@ -1,0 +1,101 @@
+import ApiPackage
+import SwiftUI
+
+/// Inhalt des xTUNE-Blocks: reine Zustandsanzeige des Christian-Kopplers.
+/// Die Werte kommen von xTune64 (UDP localhost, siehe KopplerStatus) –
+/// bedient wird der Koppler ausschließlich in xTune64.
+struct XTUNEBlock: View {
+  private let status = KopplerStatus.shared
+  private let radio = RadioVerbindung.shared
+
+  var body: some View {
+    let aktiv = status.xtuneLaeuft
+    let funkHz = (radio.eigeneSlices.first(where: { $0.txEnabled }) ?? radio.meinSlice)?.frequency
+    let abweichung = status.weichtAb(radioHz: funkHz) == true
+
+    VStack(spacing: 0) {
+      // Verbindung zum Koppler
+      HStack(spacing: Abstand.s) {
+        Circle()
+          .fill(!aktiv ? Theme.textDim : (status.kopplerOnline ? Theme.meterValue : Theme.meterRed))
+          .frame(width: 8, height: 8)
+        Text(!aktiv ? "xTune64 aus" : (status.kopplerOnline ? "Koppler online" : "Koppler aus"))
+        Spacer(minLength: 0)
+        Text("xTune64")
+          .font(Schrift.zahl)
+          .foregroundStyle(Theme.textDim)
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // Aktuelle Einstellung: L – C – H/T in eingelassenen Feldern
+      HStack(spacing: Abstand.s) {
+        valueBox("L", aktiv ? (status.paket?.l.map(String.init) ?? "–") : "–")
+        valueBox("C", aktiv ? (status.paket?.c.map(String.init) ?? "–") : "–")
+        valueBox("H/T", aktiv ? (status.paket?.ht.map { $0 == 1 ? "H" : "T" } ?? "–") : "–")
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      Furche().padding(.vertical, Abstand.xs)
+
+      // Frequenz, der der Koppler folgt – wie das VFO-Feld in xTune64
+      HStack(spacing: Abstand.s) {
+        Text("VFO \(aktiv ? (status.paket?.vfo ?? "A") : "A")")
+          .font(Schrift.normalFett)
+          .foregroundStyle(Theme.textDim)
+        Spacer(minLength: 0)
+        Text(aktiv ? (status.paket?.trxHz.map { RXBlock.format($0) } ?? "– – –") : "– – –")
+          .font(Schrift.gross.monospacedDigit())
+      }
+      .zahlFeld()
+      .frame(height: Mass.zeilenHoehe + 10)
+
+      // Band des Radios + Bereich, auf dem der Koppler steht.
+      // Orange, wenn die Radiofrequenz nicht in diesem Bereich liegt.
+      HStack(spacing: Abstand.s) {
+        Text("Band:")
+          .frame(width: 78, alignment: .leading)
+        Text(funkHz.map { Self.band($0) } ?? "–")
+          .font(Schrift.normalFett)
+        Spacer(minLength: 0)
+        Text(status.bereichText ?? "–")
+          .font(Schrift.zahl)
+          .zahlFeld()
+      }
+      .frame(height: Mass.zeilenHoehe)
+      .foregroundStyle(abweichung ? Color.orange : Theme.text)
+      .contentShape(Rectangle())
+      .help(abweichung ? "Der Koppler steht nicht auf dieser Frequenz (xTune64 prüfen)" : "")
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.s)
+    .foregroundStyle(Theme.text)
+    .onAppear { status.starten() }
+  }
+
+  /// Eingelassenes Feld: Bezeichnung links klein, Wert rechts
+  private func valueBox(_ title: String, _ value: String) -> some View {
+    HStack(spacing: Abstand.xs) {
+      Text(title)
+        .font(Schrift.klein)
+        .foregroundStyle(Theme.textDim)
+      Spacer(minLength: 0)
+      Text(value)
+        .font(Schrift.zahl)
+    }
+    .zahlFeld()
+    .frame(maxWidth: .infinity)
+  }
+
+  /// Frequenz → Band in Metern. Außerhalb der Tabelle: Wellenlänge gerundet
+  static func band(_ hz: Int) -> String {
+    let mhz = Double(hz) / 1_000_000
+    let bands: [(ClosedRange<Double>, String)] = [
+      (1.8...2.0, "160 m"), (3.5...4.0, "80 m"), (5.25...5.45, "60 m"),
+      (7.0...7.3, "40 m"), (10.1...10.15, "30 m"), (14.0...14.35, "20 m"),
+      (18.068...18.168, "17 m"), (21.0...21.45, "15 m"), (24.89...24.99, "12 m"),
+      (28.0...29.7, "10 m"), (50.0...54.0, "6 m"),
+    ]
+    if let hit = bands.first(where: { $0.0.contains(mhz) }) { return hit.1 }
+    return mhz > 0 ? "≈ \(Int((300 / mhz).rounded())) m" : "–"
+  }
+}

@@ -1,0 +1,196 @@
+import SwiftUI
+
+/// Inhalt des RX-Blocks: Slice, Antenne, TX, Mode, Frequenz, Lautstärke,
+/// Balance, Squelch, AGC, NB/NR/ANF, DAX-Kanal, Filter, RIT/XIT
+/// 01.10.2026: auf RimuSDR-Stil umgestellt (Design-Vorgabe)
+struct RXBlock: View {
+  /// Betriebsarten – bewusst ohne Digimodes (DIGU, DIGL, RTTY)
+  enum Mode: String, CaseIterable, Identifiable {
+    case usb = "USB", lsb = "LSB", am = "AM", sam = "SAM", fm = "FM"
+    var id: String { rawValue }
+  }
+  enum AGC: String, CaseIterable, Identifiable {
+    case off = "Off", slow = "Slow", med = "Med", fast = "Fast"
+    var id: String { rawValue }
+  }
+
+  /// Breite der linken Spalte – gleich wie in TX, MIC und PHONE
+  private let spalte: CGFloat = 78
+
+  // Vorerst nur in der Oberfläche – später kommen die Werte vom Radio
+  @State private var slice = "A"
+  @State private var antenna = "ANT1"
+  @State private var txSlice = "A"  // welcher Slice sendet – immer nur einer
+  @State private var mode: Mode = .usb
+  @State private var frequency = 14_200_000  // Hz
+  @State private var lockOn = false
+  @State private var muteOn = false
+  @State private var volume = 50.0
+  @State private var balance = 50.0  // 0 = links, 50 = Mitte, 100 = rechts
+  @State private var sqlOn = false
+  @State private var sqlLevel = 20.0
+  @State private var agc: AGC = .slow
+  @State private var agcThreshold = 65.0
+  @State private var wnbOn = false
+  @State private var wnbLevel = 50.0
+  @State private var showDSP = false  // Popup mit den Reglern offen?
+  @State private var nbOn = false
+  @State private var nbLevel = 50.0
+  @State private var nrOn = false
+  @State private var nrLevel = 50.0
+  @State private var anfOn = false
+  @State private var anfLevel = 50.0
+  @State private var daxChannel = 0  // 0 = Off, sonst Kanal 1–8
+  @State private var filterLow = 100  // Hz – untere Filterkante
+  @State private var filterWidth = 2700  // Hz – gewählte Filterbreite
+  @State private var ritOn = false
+  @State private var ritOffset = 0  // Hz
+  @State private var xitOn = false
+  @State private var xitOffset = 0  // Hz
+
+  /// Filterbreiten für SSB – wie die Filtertasten in SmartSDR
+  private let filterWidths = [1600, 1800, 2100, 2400, 2700, 2900, 3300, 4000]
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Slice – Antenne
+      HStack(spacing: Abstand.s) {
+        RimuPicker(selection: $slice, options: ["A", "B", "C", "D"]) { "Slice \($0)" }
+        RimuPicker(selection: $antenna, options: ["ANT1", "ANT2", "RX_A", "RX_B"]) { $0 }
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // TX (rot = Sende-Slice) – Mode
+      HStack(spacing: Abstand.s) {
+        Button("TX") { txSlice = slice }
+          .buttonStyle(KnopfStil(art: txSlice == slice ? .rot : .aus, breite: spalte))
+        RimuPicker(selection: $mode, options: Mode.allCases) { $0.rawValue }
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // Frequenz groß, daneben Schloss
+      HStack(spacing: Abstand.s) {
+        Text(Self.format(frequency))
+          .font(Schrift.frequenz)
+        Spacer(minLength: 0)
+        Button("LOCK") { lockOn.toggle() }
+          .buttonStyle(KnopfStil(art: lockOn ? .an : .aus, breite: 60))
+      }
+      .frame(height: Mass.zeilenHoehe + Abstand.s)
+
+      // Lautstärke, Balance, Squelch, AGC
+      ElementReglerZeile(value: $volume) {
+        Button("MUTE") { muteOn.toggle() }
+          .buttonStyle(KnopfStil(art: muteOn ? .rot : .aus, breite: spalte))
+      }
+      ReglerZeile(label: "Balance:", value: $balance)
+      ElementReglerZeile(value: $sqlLevel) {
+        Button("SQL") { sqlOn.toggle() }
+          .buttonStyle(KnopfStil(art: sqlOn ? .an : .aus, breite: spalte))
+      }
+      ElementReglerZeile(value: $agcThreshold) {
+        RimuPicker(selection: $agc, options: AGC.allCases) { $0.rawValue }
+      }
+
+      Furche().padding(.vertical, Abstand.xs)
+
+      // Störunterdrückung: nur Schalter – die Regler stecken im OPT-Popup
+      HStack(spacing: Abstand.xs) {
+        Button("NB") { nbOn.toggle() }.buttonStyle(KnopfStil(art: nbOn ? .an : .aus, breite: 54))
+        Button("NR") { nrOn.toggle() }.buttonStyle(KnopfStil(art: nrOn ? .an : .aus, breite: 54))
+        Button("ANF") { anfOn.toggle() }.buttonStyle(KnopfStil(art: anfOn ? .an : .aus, breite: 54))
+        Spacer(minLength: 0)
+        Button("OPT") { showDSP.toggle() }
+          .buttonStyle(KnopfStil(art: showDSP ? .an : .aus, breite: 54))
+          .popover(isPresented: $showDSP, arrowEdge: .top) {
+            VStack(spacing: 0) {
+              dspRow("WNB", isOn: $wnbOn, value: $wnbLevel)
+              dspRow("NB", isOn: $nbOn, value: $nbLevel)
+              dspRow("NR", isOn: $nrOn, value: $nrLevel)
+              dspRow("ANF", isOn: $anfOn, value: $anfLevel)
+            }
+            .font(Schrift.normal)
+            .padding(Abstand.m)
+            .frame(width: 280)
+          }
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // DAX-Kanal: Empfangsaudio dieses Slice nach außen geben
+      HStack(spacing: Abstand.s) {
+        Text("DAX:")
+          .frame(width: spalte, alignment: .leading)
+        RimuPicker(selection: $daxChannel, options: Array(0...8)) { $0 == 0 ? "Off" : "Kanal \($0)" }
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      Furche().padding(.vertical, Abstand.xs)
+
+      // Filter: Kanten + Tasten für die Breite
+      HStack(spacing: Abstand.s) {
+        Text("Filter:")
+          .frame(width: spalte, alignment: .leading)
+        Spacer(minLength: 0)
+        Text("\(filterLow) – \(filterLow + filterWidth) Hz")
+          .font(Schrift.zahl)
+      }
+      .frame(height: Mass.zeilenHoehe)
+      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Abstand.xs), count: 4),
+                spacing: Abstand.xs) {
+        ForEach(filterWidths, id: \.self) { width in
+          Button(Self.kHz(width)) { filterWidth = width }
+            .buttonStyle(KnopfStil(art: filterWidth == width ? .an : .aus, breite: 54))
+        }
+      }
+
+      Furche().padding(.vertical, Abstand.s)
+
+      // RIT / XIT: Knopf + Versatz in Hz
+      offsetRow("RIT", isOn: $ritOn, offset: $ritOffset)
+      offsetRow("XIT", isOn: $xitOn, offset: $xitOffset)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.s)
+    .foregroundStyle(Theme.text)
+  }
+
+  /// Zeile im OPT-Popup: Name – Regler – Wert – Häkchen (ein/aus)
+  private func dspRow(_ title: String, isOn: Binding<Bool>, value: Binding<Double>) -> some View {
+    HStack(spacing: Abstand.s) {
+      Text(title)
+        .frame(width: 40, alignment: .leading)
+      RimuSlider(value: value)
+      Text("\(Int(value.wrappedValue))")
+        .font(Schrift.zahl)
+        .frame(width: 30, alignment: .trailing)
+      Toggle("", isOn: isOn)
+        .toggleStyle(.checkbox)
+        .labelsHidden()
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+
+  /// Zeile: Knopf – Versatz in Hz (zum Eintippen, mit Pfeilen)
+  private func offsetRow(_ title: String, isOn: Binding<Bool>, offset: Binding<Int>) -> some View {
+    HStack(spacing: Abstand.s) {
+      Button(title) { isOn.wrappedValue.toggle() }
+        .buttonStyle(KnopfStil(art: isOn.wrappedValue ? .an : .aus, breite: spalte))
+      Spacer(minLength: 0)
+      HzEingabe(value: offset, range: -9990...9990, vorzeichen: true, breite: 120)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+
+  /// 2700 → "2.7K"
+  static func kHz(_ hz: Int) -> String {
+    String(format: "%.1fK", Double(hz) / 1000)
+  }
+
+  /// 14200000 → "14.200.000"
+  static func format(_ hz: Int) -> String {
+    let mhz = hz / 1_000_000
+    let khz = (hz / 1_000) % 1_000
+    let rest = hz % 1_000
+    return "\(mhz)." + String(format: "%03d", khz) + "." + String(format: "%03d", rest)
+  }
+}

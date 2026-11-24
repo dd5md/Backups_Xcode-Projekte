@@ -1,0 +1,155 @@
+import ApiPackage
+import SwiftUI
+
+/// Knopfleiste links im Panadapter (RimuSDR-Stil), senkrecht über die ganze Höhe.
+/// ◀ fährt sie ein, unten öffnet „Audio“ die Audiokette links.
+struct PanadapterToolbar: View {
+  @Binding var audioOpen: Bool  // linkes Panel (Audiokette) offen?
+  @State private var open = true  // Knopfleiste ausgefahren?
+  @State private var active: Set<String> = []  // welche Knöpfe gerade an sind (vorerst nur Optik)
+
+  /// Knöpfe von oben nach unten
+  private let buttons = ["+RX", "+Split", "+TNF", "Band", "BW", "ANT", "Disp", "DAX", "Mem"]
+
+  var body: some View {
+    Group {
+      if open {
+        VStack(spacing: 6) {
+          // Einfahren
+          iconButton("chevron.left", help: "Knopfleiste einfahren") { open = false }
+
+          ForEach(buttons, id: \.self) { title in
+            FlatButton(title: title, isOn: active.contains(title)) { toggle(title) }
+              .popover(isPresented: popupOffen(title), arrowEdge: .trailing) {
+                popup(title)
+              }
+          }
+
+          Spacer(minLength: 0)
+
+          // Audiokette ein-/ausfahren
+          FlatButton(title: "Audio", isOn: audioOpen) { audioOpen.toggle() }
+        }
+        .padding(6)
+        .frame(width: 66)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .overlay(alignment: .trailing) {
+          Rectangle().fill(Theme.border).frame(width: 1)
+        }
+        .transition(.move(edge: .leading))
+      } else {
+        // Eingefahren: nur ein schmaler Griff mit ▶
+        VStack {
+          iconButton("chevron.right", help: "Knopfleiste ausfahren") { open = true }
+          Spacer(minLength: 0)
+        }
+        .padding(.vertical, 6)
+        .frame(width: 22)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .transition(.move(edge: .leading))
+      }
+    }
+    .font(Schrift.normal)
+    .animation(.easeInOut(duration: 0.2), value: open)
+  }
+
+  /// Kleiner Knopf nur mit Symbol
+  private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(Schrift.kleinFett)
+        .foregroundStyle(Theme.textDim)
+        .frame(maxWidth: .infinity)
+        .frame(height: 22)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .focusEffectDisabled()
+    .help(help)
+  }
+
+  // MARK: - Popups der Knöpfe (Band, ANT – weitere folgen)
+
+  private static let mitPopup: Set<String> = ["Band", "ANT"]
+
+  /// Popup ist offen, solange der Knopf an ist; Schließen schaltet den Knopf wieder aus
+  private func popupOffen(_ title: String) -> Binding<Bool> {
+    Binding(
+      get: { Self.mitPopup.contains(title) && active.contains(title) },
+      set: { if !$0 { active.remove(title) } })
+  }
+
+  @ViewBuilder private func popup(_ title: String) -> some View {
+    switch title {
+    case "Band": BandPopup { active.remove("Band") }
+    case "ANT": AntennenPopup()
+    default: EmptyView()
+    }
+  }
+
+  private func toggle(_ title: String) {
+    if active.contains(title) { active.remove(title) } else { active.insert(title) }
+  }
+}
+
+// MARK: - Band-Wahl
+
+/// Bänder als Knöpfe (wie SmartSDR); wählt das Band im Panadapter – das Radio setzt
+/// Frequenz, Mode und Filter aus seinem Bandspeicher
+struct BandPopup: View {
+  var fertig: () -> Void
+  private let radio = RadioVerbindung.shared
+  private let baender = ["160", "80", "60", "40", "30", "20", "17", "15", "12", "10", "6", "GEN"]
+
+  var body: some View {
+    let s = radio.meinSlice
+    let aktuell = s.map { RadioVerbindung.band($0.frequency).replacingOccurrences(of: " m", with: "") } ?? ""
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      Text("BAND").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+      LazyVGrid(columns: Array(repeating: GridItem(.fixed(54), spacing: Abstand.xs), count: 4), spacing: Abstand.xs) {
+        ForEach(baender, id: \.self) { band in
+          Button(band) {
+            if let s { radio.sende("display pan set 0x\(String(s.panadapterId, radix: 16, uppercase: true)) band=\(band)") }
+            fertig()
+          }
+          .buttonStyle(KnopfStil(art: band == aktuell ? .an : .aus, breite: 54))
+          .disabled(s == nil)
+        }
+      }
+    }
+    .padding(Abstand.m)
+    .background(Theme.rimuBlock)
+  }
+}
+
+// MARK: - Antennen-Wahl
+
+/// RX-Antenne des Slice und TX-Antenne – Listen kommen vom Radio
+struct AntennenPopup: View {
+  private let radio = RadioVerbindung.shared
+  @State private var rx = "ANT1"
+  @State private var tx = "ANT1"
+
+  var body: some View {
+    let s = radio.meinSlice
+    VStack(alignment: .leading, spacing: Abstand.s) {
+      Text("ANTENNE").font(Schrift.kleinFett).foregroundStyle(Theme.textDim)
+      HStack(spacing: Abstand.s) {
+        Text("RX:").frame(width: 30, alignment: .leading)
+        RimuPicker(selection: radio.text($rx, \.rxAnt, "rxant"),
+                   options: s.map { $0.rxAntList.nilWennLeer ?? ["ANT1", "ANT2"] } ?? ["ANT1", "ANT2"]) { $0 }
+      }
+      HStack(spacing: Abstand.s) {
+        Text("TX:").frame(width: 30, alignment: .leading)
+        RimuPicker(selection: radio.text($tx, \.txAnt, "txant"),
+                   options: s.map { $0.txAntList.nilWennLeer ?? ["ANT1", "ANT2"] } ?? ["ANT1", "ANT2"]) { $0 }
+      }
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.m)
+    .frame(width: 220)
+    .background(Theme.rimuBlock)
+  }
+}

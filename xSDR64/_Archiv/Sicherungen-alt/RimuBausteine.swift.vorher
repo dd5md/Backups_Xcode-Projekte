@@ -1,0 +1,382 @@
+import AppKit
+import SwiftUI
+
+// RimuBausteine.swift – Bedienelemente im RimuSDR-Stil (Design-Vorgabe 01.10.2026).
+// Nutzt nur Schrift/Abstand/Mass/Radius aus Stil.swift und Farben aus Theme.swift.
+
+// MARK: - Messanzeige wie in RimuSDR
+/// Oben die Beschriftung, darunter Balken zwischen zwei Linien
+/// (blau, ab `redFrom` rot), mit Teilstrichen. Steht auf dunklem Grund.
+struct RimuMeter: View {
+  struct Mark {
+    let pos: Double  // 0…1
+    let text: String
+    var red = false
+  }
+
+  let marks: [Mark]
+  let redFrom: Double  // ab hier rot (0…1)
+  var value: Double = 0  // Messwert 0…1 – kommt später vom Radio
+  var barColor = Theme.meterRed  // Farbe des Messbalkens
+  var ticks = 10  // Teilstriche
+
+  private let lineBlue = Theme.meterBlue
+  private let lineRed = Theme.meterRed
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 2) {
+      // Beschriftung
+      GeometryReader { geo in
+        let w = geo.size.width
+        ZStack(alignment: .topLeading) {
+          ForEach(marks.indices, id: \.self) { i in
+            let m = marks[i]
+            let t = Text(m.text)
+              .font(Schrift.normal)
+              .foregroundStyle(m.red ? lineRed : Theme.text)
+              .fixedSize()
+            // erste Beschriftung bündig links, letzte bündig rechts – nichts wird abgeschnitten
+            if m.pos <= 0.01 {
+              HStack { t; Spacer(minLength: 0) }
+            } else if m.pos >= 0.99 {
+              HStack { Spacer(minLength: 0); t }
+            } else {
+              t.position(x: m.pos * w, y: 8)
+            }
+          }
+        }
+      }
+      .frame(height: 16)
+
+      // Linie – Balken – Linie
+      GeometryReader { geo in
+        let w = geo.size.width
+        let h = geo.size.height
+        ZStack(alignment: .topLeading) {
+          // Messbalken
+          Rectangle()
+            .fill(barColor)
+            .frame(width: w * min(max(value, 0), 1), height: h - 6)
+            .offset(y: 3)
+          // Spitzenwert: bleibt 1 s stehen
+          SpitzenStrich(value: value, hoehe: h - 4, y: h / 2)
+          // obere und untere Linie, blau bis redFrom, dann rot
+          ForEach([CGFloat(1), h - 1], id: \.self) { y in
+            Path { p in
+              p.move(to: CGPoint(x: 0, y: y))
+              p.addLine(to: CGPoint(x: w * redFrom, y: y))
+            }
+            .stroke(lineBlue, lineWidth: 2)
+            Path { p in
+              p.move(to: CGPoint(x: w * redFrom, y: y))
+              p.addLine(to: CGPoint(x: w, y: y))
+            }
+            .stroke(lineRed, lineWidth: 2)
+          }
+          // Teilstriche zwischen den Linien
+          ForEach(0...ticks, id: \.self) { i in
+            let x = min(max(Double(i) / Double(ticks) * w, 1), w - 1)
+            Rectangle()
+              .fill(Double(i) / Double(ticks) >= redFrom ? lineRed : lineBlue)
+              .frame(width: 2, height: h / 2)
+              .position(x: x, y: h / 2)
+          }
+        }
+      }
+      .frame(height: 14)
+    }
+  }
+}
+
+// MARK: - Schieberegler wie in RimuSDR: dünne Schiene, kleiner eckiger Griff
+struct RimuSlider: View {
+  @Binding var value: Double
+  var range: ClosedRange<Double> = 0...100
+
+  private let griffBreite: CGFloat = 16
+  private let griffHoehe: CGFloat = 16
+
+  var body: some View {
+    GeometryReader { geo in
+      let w = geo.size.width
+      let nutzbar = max(w - griffBreite, 1)
+      let anteil = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
+      let x = nutzbar * min(max(anteil, 0), 1)
+      ZStack(alignment: .leading) {
+        // Schiene
+        Capsule()
+          .fill(Theme.rimuKopf)
+          .overlay(Capsule().strokeBorder(Theme.knopfRand, lineWidth: 1))
+          .frame(height: 5)
+        // gefüllter Teil
+        Capsule()
+          .fill(LinearGradient(colors: [Theme.knopfAnOben, Theme.knopfAnUnten],
+                               startPoint: .top, endPoint: .bottom))
+          .frame(width: x + griffBreite / 2, height: 5)
+        // Griff
+        RoundedRectangle(cornerRadius: Radius.knopf)
+          .fill(LinearGradient(colors: [Theme.knopfAusOben, Theme.knopfAusUnten],
+                               startPoint: .top, endPoint: .bottom))
+          .overlay(RoundedRectangle(cornerRadius: Radius.knopf)
+            .inset(by: 1)
+            .strokeBorder(LinearGradient(colors: [Theme.knopfLichtOben, Theme.knopfLichtUnten],
+                                         startPoint: .top, endPoint: .bottom), lineWidth: 1))
+          .overlay(RoundedRectangle(cornerRadius: Radius.knopf)
+            .strokeBorder(Theme.knopfRand, lineWidth: 1))
+          .frame(width: griffBreite, height: griffHoehe)
+          .offset(x: x)
+      }
+      .frame(height: geo.size.height)
+      .contentShape(Rectangle())
+      .gesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { g in
+            let a = min(max((g.location.x - griffBreite / 2) / nutzbar, 0), 1)
+            value = (range.lowerBound + a * (range.upperBound - range.lowerBound)).rounded()
+          }
+      )
+    }
+    .frame(height: Mass.knopfHoehe)
+  }
+}
+
+// MARK: - Zeile: Beschriftung links – Regler – Zahl rechts (alles in Spalten)
+struct ReglerZeile: View {
+  let label: String
+  @Binding var value: Double
+  var range: ClosedRange<Double> = 0...100
+  /// Breite der Beschriftungsspalte – in einem Block überall gleich
+  var labelBreite: CGFloat = 78
+
+  var body: some View {
+    HStack(spacing: Abstand.s) {
+      Text(label)
+        .font(Schrift.normal)
+        .frame(width: labelBreite, alignment: .leading)
+      RimuSlider(value: $value, range: range)
+      Text("\(Int(value))")
+        .font(Schrift.zahl)
+        .frame(width: 32, alignment: .trailing)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+}
+
+// MARK: - Auswahlfeld (Dropdown) wie in RimuSDR: sieht aus wie ein Knopf „aus“, rechts ein kleiner Pfeil
+struct RimuPicker<Value: Hashable>: View {
+  @Binding var selection: Value
+  let options: [Value]
+  let title: (Value) -> String
+
+  var body: some View {
+    Menu {
+      Picker("", selection: $selection) {
+        ForEach(options, id: \.self) { option in
+          Text(title(option)).tag(option)
+        }
+      }
+      .pickerStyle(.inline)
+      .labelsHidden()
+    } label: {
+      HStack(spacing: Abstand.xs) {
+        Text(title(selection))
+          .lineLimit(1)
+        Spacer(minLength: 0)
+        Image(systemName: "arrowtriangle.down.fill")
+          .font(Schrift.klein)
+          .imageScale(.small)
+          .foregroundStyle(Theme.textDim)
+      }
+      .font(Schrift.normal)
+      .foregroundStyle(Color.white)
+      .padding(.horizontal, Abstand.s)
+      .frame(maxWidth: .infinity)
+      .frame(height: Mass.knopfHoehe)
+      .background(
+        RoundedRectangle(cornerRadius: Radius.knopf)
+          .fill(LinearGradient(colors: [Theme.knopfAusOben, Theme.knopfAusUnten],
+                               startPoint: .top, endPoint: .bottom)))
+      .overlay(
+        RoundedRectangle(cornerRadius: Radius.knopf)
+          .inset(by: 1)
+          .strokeBorder(LinearGradient(colors: [Theme.knopfLichtOben, Theme.knopfLichtUnten],
+                                       startPoint: .top, endPoint: .bottom), lineWidth: 1))
+      .overlay(
+        RoundedRectangle(cornerRadius: Radius.knopf)
+          .strokeBorder(Theme.knopfRand, lineWidth: 1))
+      .contentShape(Rectangle())
+    }
+    .menuStyle(.button)
+    .buttonStyle(.plain)
+    .menuIndicator(.hidden)
+    .focusEffectDisabled()
+  }
+}
+
+// MARK: - Zeile: beliebiges Element in der Beschriftungsspalte – Regler – Zahl
+/// z. B. [MON] ─────○── 44  oder  [BAL ▾] ───○── 45
+struct ElementReglerZeile<Links: View>: View {
+  @Binding var value: Double
+  var range: ClosedRange<Double> = 0...100
+  var labelBreite: CGFloat = 78
+  @ViewBuilder var links: Links
+
+  var body: some View {
+    HStack(spacing: Abstand.s) {
+      links
+        .frame(width: labelBreite)
+      RimuSlider(value: $value, range: range)
+      Text("\(Int(value))")
+        .font(Schrift.zahl)
+        .frame(width: 32, alignment: .trailing)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+}
+
+// MARK: - Zahlenfeld in Hz zum Eintippen, mit kleinen Auf/Ab-Pfeilen (wie TX-Filter in RimuSDR)
+/// Tippen sammelt nur Text; erst Enter oder Verlassen übernimmt und begrenzt den Wert.
+struct HzEingabe: View {
+  @Binding var value: Int
+  let range: ClosedRange<Int>
+  var step = 10
+  var vorzeichen = false  // „+50 Hz“ (für RIT/XIT)
+  var breite: CGFloat? = 96  // nil = so breit wie Platz ist
+
+  @State private var text = ""
+  @FocusState private var focused: Bool
+
+  var body: some View {
+    HStack(spacing: Abstand.xs) {
+      TextField("", text: $text)
+        .textFieldStyle(.plain)
+        .multilineTextAlignment(.trailing)
+        .focused($focused)
+        .onSubmit { commit() }
+        .onChange(of: focused) { _, isFocused in
+          if !isFocused { commit() }
+        }
+      Text("Hz").foregroundStyle(Theme.textDim)
+      Stepper("", value: $value, in: range, step: step)
+        .labelsHidden()
+        .controlSize(.mini)
+    }
+    .zahlFeld()
+    .frame(maxWidth: breite ?? .infinity)
+    .onAppear { text = anzeige(value) }
+    .onChange(of: value) { _, new in
+      if !focused { text = anzeige(new) }
+    }
+  }
+
+  private func anzeige(_ v: Int) -> String {
+    vorzeichen && v > 0 ? "+\(v)" : "\(v)"
+  }
+
+  private func commit() {
+    var digits = text.filter { $0.isNumber || $0 == "-" }
+    if digits.count > 1 { digits = String(digits.prefix(1)) + digits.dropFirst().filter(\.isNumber) }
+    if let typed = Int(digits) {
+      value = min(max(typed, range.lowerBound), range.upperBound)
+    }
+    text = anzeige(value)
+  }
+}
+
+// MARK: - Ein/Aus-Schalter, selbst gezeichnet
+/// Der Mac-Schalter wird grau, sobald ein anderes Fenster vorne ist (z. B. das Plugin-Fenster).
+/// Dieser hier zeigt seine Farbe immer – man sieht jederzeit, was an ist.
+struct RimuSchalter: View {
+  @Binding var isOn: Bool
+  var farbe = Theme.knopfAnOben  // Farbe, wenn eingeschaltet
+
+  var body: some View {
+    Button { isOn.toggle() } label: {
+      ZStack(alignment: isOn ? .trailing : .leading) {
+        Capsule()
+          .fill(isOn ? farbe : Theme.rimuKopf)
+          .overlay(Capsule().strokeBorder(Theme.knopfRand, lineWidth: 1))
+        Circle()
+          .fill(LinearGradient(colors: [Color.white, Color(white: 0.85)],
+                               startPoint: .top, endPoint: .bottom))
+          .overlay(Circle().strokeBorder(Theme.knopfRand, lineWidth: 1))
+          .padding(2)
+      }
+      .frame(width: 34, height: 18)
+      .contentShape(Capsule())
+      .animation(.easeOut(duration: 0.12), value: isOn)
+    }
+    .buttonStyle(.plain)
+    .focusEffectDisabled()
+  }
+}
+
+// MARK: - Fenster-Einstellung: hängt das Fenster an das Hauptfenster von xSDR64
+/// Wie ein Beiboot: liegt immer direkt über dem Hauptfenster, wandert mit, und wenn man
+/// in ein anderes Programm wechselt (z. B. Xcode), geht es mit xSDR64 nach hinten –
+/// es steht nie über fremden Programmen. Plugin-Fenster (z. B. MJUC) dürfen davor liegen.
+struct UeberAppFenster: NSViewRepresentable {
+  func makeNSView(context: Context) -> NSView {
+    let view = NSView()
+    DispatchQueue.main.async {
+      guard let window = view.window else { return }
+      window.level = .normal
+      // Hauptfenster suchen: das sichtbare Fenster mit dem Titel „xSDR64“
+      if let haupt = NSApp.windows.first(where: { $0 !== window && $0.title == "xSDR64" && $0.isVisible }),
+         window.parent == nil {
+        haupt.addChildWindow(window, ordered: .above)
+      }
+    }
+    return view
+  }
+  func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+// MARK: - Spitzenwert-Strich für Messanzeigen (Peak-Hold)
+
+/// Kleiner Strich am höchsten Wert der letzten Zeit: bleibt 1 Sekunde stehen,
+/// sinkt dann langsam ab – so lässt sich ein Signal in Ruhe ablesen (Vorbild SmartSDR Windows).
+struct SpitzenStrich: View {
+  let value: Double  // Messwert 0…1
+  var farbe: Color = .white
+  var hoehe: CGFloat  // Länge des Strichs
+  var y: CGFloat  // Mitte des Strichs (von oben)
+
+  /// so lange bleibt die Spitze stehen (s), danach sinkt sie um `sinken` Skalenbreiten pro Sekunde
+  static let halten = 1.0
+  static let sinken = 0.5
+
+  @State private var gehalten = 0.0
+  @State private var zeit = Date.distantPast
+
+  var body: some View {
+    // nur zeichnen, solange etwas zu sehen ist – sonst ruht die Uhr (spart Prozessor)
+    let ruhe = value <= 0.001 && gehalten <= 0.001
+    TimelineView(.animation(minimumInterval: 1.0 / 20, paused: ruhe)) { kontext in
+      GeometryReader { geo in
+        let p = Self.stellung(gehalten, zeit, kontext.date, value)
+        if p > 0.005 {
+          Rectangle()
+            .fill(farbe)
+            .frame(width: 2, height: hoehe)
+            .position(x: min(max(p * geo.size.width, 1), geo.size.width - 1), y: y)
+        }
+      }
+    }
+    .onChange(of: value, initial: true) { _, neu in
+      let jetzt = Date()
+      if neu >= Self.stellung(gehalten, zeit, jetzt, neu) {
+        gehalten = min(max(neu, 0), 1)
+        zeit = jetzt
+      }
+    }
+    .allowsHitTesting(false)
+  }
+
+  /// Wo die Spitze gerade steht: erst gehalten, dann langsam sinkend, nie unter dem Messwert
+  static func stellung(_ g: Double, _ t: Date, _ jetzt: Date, _ v: Double) -> Double {
+    let alter = jetzt.timeIntervalSince(t)
+    if alter < halten { return g }
+    return max(min(max(v, 0), 1), g - (alter - halten) * sinken)
+  }
+}

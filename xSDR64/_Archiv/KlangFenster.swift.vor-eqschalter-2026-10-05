@@ -1,0 +1,76 @@
+import ApiPackage
+import SwiftUI
+
+/// Radio → Klangaufbereitung im Radio …
+/// Zeigt, was das Radio selbst am Ton macht: TX-Equalizer, RX-Equalizer, PROC (Sprachprozessor), DEXP.
+/// Wichtig, weil xSDR64 diese Werte sonst nirgends anzeigt – ein vergessener EQ ändert den Klang deutlich.
+struct KlangFenster: View {
+  @State private var radio = RadioVerbindung.shared
+
+  var body: some View {
+    let api = radio.api
+    let t = api.transmit
+    Form {
+      if !radio.istVerbunden {
+        Text("Radio nicht verbunden").foregroundStyle(Theme.textDim)
+      } else {
+        eqAbschnitt("Sende-Equalizer (TX)", id: "txsc")
+        eqAbschnitt("Empfangs-Equalizer (RX)", id: "rxsc")
+        Section("Sprachprozessor / Expander") {
+          HStack {
+            Toggle("PROC (Sprachprozessor)", isOn: Binding(
+              get: { t.speechProcessorEnabled },
+              set: { radio.sende("transmit set speech_processor_enable=\($0 ? 1 : 0)") }))
+            Spacer()
+            Text("Stufe \(t.speechProcessorLevel)").foregroundStyle(Theme.textDim)
+          }
+          HStack {
+            Toggle("DEXP (Expander)", isOn: Binding(
+              get: { t.companderEnabled },
+              set: { radio.sende("transmit set compander=\($0 ? 1 : 0)") }))
+            Spacer()
+            Text("Stufe \(t.companderLevel)").foregroundStyle(Theme.textDim)
+          }
+        }
+        Text("Alles, was hier eingeschaltet ist, bearbeitet den Ton im Radio zusätzlich zu deiner Audiokette.")
+          .font(Schrift.klein).foregroundStyle(Theme.textDim)
+      }
+    }
+    .toggleStyle(.checkbox)
+    .formStyle(.grouped)
+    .frame(width: 520, height: 520)
+    .background(Theme.window)
+    .onAppear {
+      // aktuellen Stand der Equalizer beim Radio abfragen
+      radio.sende("eq txsc info")
+      radio.sende("eq rxsc info")
+    }
+  }
+
+  @ViewBuilder
+  private func eqAbschnitt(_ titel: String, id: String) -> some View {
+    let eq = radio.api.equalizers.first { $0.id == id }
+    Section(titel) {
+      Toggle(eq?.eqEnabled == true ? "eingeschaltet" : "ausgeschaltet", isOn: Binding(
+        get: { eq?.eqEnabled ?? false },
+        set: { radio.sende("eq \(id) mode=\($0 ? 1 : 0)") }))
+      if let eq {
+        let werte = [("63", eq.hz63), ("125", eq.hz125), ("250", eq.hz250), ("500", eq.hz500),
+                     ("1k", eq.hz1000), ("2k", eq.hz2000), ("4k", eq.hz4000), ("8k", eq.hz8000)]
+        HStack(spacing: 10) {
+          ForEach(werte, id: \.0) { name, wert in
+            VStack(spacing: 2) {
+              Text(wert > 0 ? "+\(wert)" : "\(wert)")
+                .font(Schrift.zahl)
+                .foregroundStyle(wert == 0 ? Theme.textDim : (eq.eqEnabled ? Theme.meterYellow : Theme.text))
+              Text(name).font(Schrift.klein).foregroundStyle(Theme.textDim)
+            }
+            .frame(maxWidth: .infinity)
+          }
+        }
+      } else {
+        Text("Noch keine Werte vom Radio").font(Schrift.klein).foregroundStyle(Theme.textDim)
+      }
+    }
+  }
+}

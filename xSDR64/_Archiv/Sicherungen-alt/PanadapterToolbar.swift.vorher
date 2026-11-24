@@ -1,0 +1,72 @@
+import SwiftUI
+
+/// Knopfleiste links im Panadapter (RimuSDR-Stil), senkrecht über die ganze Höhe.
+/// ◀ fährt sie ein, unten öffnet „Audio“ die Audiokette links.
+struct PanadapterToolbar: View {
+  @Binding var audioOpen: Bool  // linkes Panel (Audiokette) offen?
+  @State private var open = true  // Knopfleiste ausgefahren?
+  @State private var active: Set<String> = []  // welche Knöpfe gerade an sind (vorerst nur Optik)
+
+  /// Knöpfe von oben nach unten
+  private let buttons = ["+RX", "+Split", "+TNF", "Band", "BW", "ANT", "Disp", "DAX", "Mem"]
+
+  var body: some View {
+    Group {
+      if open {
+        VStack(spacing: 6) {
+          // Einfahren
+          iconButton("chevron.left", help: "Knopfleiste einfahren") { open = false }
+
+          ForEach(buttons, id: \.self) { title in
+            FlatButton(title: title, isOn: active.contains(title)) { toggle(title) }
+          }
+
+          Spacer(minLength: 0)
+
+          // Audiokette ein-/ausfahren
+          FlatButton(title: "Audio", isOn: audioOpen) { audioOpen.toggle() }
+        }
+        .padding(6)
+        .frame(width: 66)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .overlay(alignment: .trailing) {
+          Rectangle().fill(Theme.border).frame(width: 1)
+        }
+        .transition(.move(edge: .leading))
+      } else {
+        // Eingefahren: nur ein schmaler Griff mit ▶
+        VStack {
+          iconButton("chevron.right", help: "Knopfleiste ausfahren") { open = true }
+          Spacer(minLength: 0)
+        }
+        .padding(.vertical, 6)
+        .frame(width: 22)
+        .frame(maxHeight: .infinity)
+        .background(Theme.panel.opacity(0.92))
+        .transition(.move(edge: .leading))
+      }
+    }
+    .font(Schrift.normal)
+    .animation(.easeInOut(duration: 0.2), value: open)
+  }
+
+  /// Kleiner Knopf nur mit Symbol
+  private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+      Image(systemName: symbol)
+        .font(Schrift.kleinFett)
+        .foregroundStyle(Theme.textDim)
+        .frame(maxWidth: .infinity)
+        .frame(height: 22)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .focusEffectDisabled()
+    .help(help)
+  }
+
+  private func toggle(_ title: String) {
+    if active.contains(title) { active.remove(title) } else { active.insert(title) }
+  }
+}

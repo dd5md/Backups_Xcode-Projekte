@@ -1,0 +1,154 @@
+//
+//  Sidebar.swift
+//  xSDR64
+//
+//  Created by Mathias Davidheimann on 24.09.26.
+//
+
+import SwiftUI
+
+/// Die Blöcke der Seitenleiste – in dieser Reihenfolge erscheinen sie auch
+enum SidebarBlock: String, CaseIterable, Identifiable {
+  case tx = "TX"
+  case mic = "MIC"
+  case phone = "PHNE"
+  case rx = "RX"
+  case xtune = "xTUNE"      // eigener Koppler über xTune64 (nicht der Flex-Tuner)
+
+  var id: String { rawValue }
+
+  /// Überschrift in der Kopfzeile des Blocks (Tab-Knopf nutzt die Kurzform oben)
+  var title: String {
+    switch self {
+    case .tx: "TX"
+    case .mic: "MIC"
+    case .phone: "PHONE"
+    case .rx: "RX"
+    case .xtune: "KOPPLER · xTune64"
+    }
+  }
+}
+
+// MARK: - Die Seitenleiste
+struct Sidebar: View {
+  /// Welche Blöcke sind sichtbar? Start: alle
+  @State private var visible: Set<SidebarBlock> = [.tx, .mic, .phone, .rx, .xtune]
+
+  var body: some View {
+    VStack(spacing: 6) {
+      // Tab-Knöpfe oben: blau = Block sichtbar
+      HStack(spacing: 4) {
+        ForEach(SidebarBlock.allCases) { block in
+          TabButton(title: block.rawValue, isOn: visible.contains(block)) {
+            toggle(block)
+          }
+        }
+      }
+      // Die Blöcke untereinander, scrollbar falls das Fenster zu niedrig ist
+      ScrollView {
+        VStack(spacing: 6) {
+          ForEach(SidebarBlock.allCases) { block in
+            if visible.contains(block) {
+              SectionBox(title: block.title) {
+                blockContent(block)
+              }
+            }
+          }
+        }
+      }
+    }
+    .frame(width: 292)
+    .animation(.easeInOut(duration: 0.2), value: visible)
+  }
+  /// Welcher Inhalt gehört in welchen Block?
+  @ViewBuilder
+  private func blockContent(_ block: SidebarBlock) -> some View {
+    switch block {
+    case .tx:
+      TXBlock()
+    case .mic:
+      MICBlock()
+    case .phone:
+      PHONEBlock()
+    case .rx:
+      RXBlock()
+    default:
+      Text("Inhalt folgt")
+        .foregroundStyle(Theme.textDim)
+    }
+  }
+  /// Block ein- bzw. ausblenden
+  private func toggle(_ block: SidebarBlock) {
+    if visible.contains(block) {
+      visible.remove(block)
+    } else {
+      visible.insert(block)
+    }
+  }
+}
+
+// MARK: - Tab-Knopf oben (TX, MIC, PHNE, RX, xTUNE)
+struct TabButton: View {
+  let title: String
+  let isOn: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Text(title)
+        .font(.system(size: 13))
+        .frame(maxWidth: .infinity)
+        .frame(height: 28)
+        .foregroundStyle(isOn ? .white : Theme.textDim)
+        .background(
+          RoundedRectangle(cornerRadius: 3)
+            .fill(isOn ? Theme.tabOn : Theme.control)
+        )
+        .overlay(
+          RoundedRectangle(cornerRadius: 3)
+            .stroke(isOn ? Theme.tabOnBorder : Theme.controlBorder)
+        )
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .focusEffectDisabled()
+  }
+}
+
+// MARK: - Ein Block mit Kopfzeile (≡ Titel) – Klick auf die Kopfzeile klappt ihn zu
+struct SectionBox<Content: View>: View {
+  let title: String
+  @ViewBuilder var content: Content  // was im Block steht
+  @State private var expanded = true  // aufgeklappt?
+
+  var body: some View {
+    VStack(spacing: 0) {
+      Button {
+        expanded.toggle()
+      } label: {
+        HStack(spacing: 12) {
+          Image(systemName: "line.3.horizontal")
+          Text(title)
+            .font(.system(size: 13, weight: .bold))
+          Spacer()
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .focusEffectDisabled()
+      .background(Theme.sectionHeader)
+
+      if expanded {
+        Rectangle().fill(Theme.border).frame(height: 1)
+        content
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(12)
+      }
+    }
+    .background(Theme.panel)
+    .overlay(Rectangle().stroke(Theme.border))
+  }
+}
+

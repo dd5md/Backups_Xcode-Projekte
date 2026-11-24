@@ -1,0 +1,213 @@
+import SwiftUI
+
+/// Obere Leiste (RimuSDR-Stil):
+/// links Lautsprecher + Kopfhörer, Mitte aktiver Slice, rechts Audio-Weg + Verbindung
+struct TopBar: View {
+  enum AudioOut: String, CaseIterable, Identifiable {
+    case radio = "Radio", mac = "Mac"
+    var id: String { rawValue }
+  }
+
+  // Vorerst nur Oberfläche – später vom Radio
+  @State private var speaker = 60.0
+  @State private var speakerMuted = false
+  @State private var phones = 50.0
+  @State private var phonesMuted = false
+  @State private var audioOut: AudioOut = .mac
+  @State private var connected = false
+  @State private var showSettings = false  // Zahnrad-Popup offen?
+  @State private var recording = false
+
+  var body: some View {
+    HStack(spacing: 14) {
+      // Lautsprecher
+      volume(icon: speakerMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
+             muted: $speakerMuted, value: $speaker, help: "Lautsprecher")
+      // Kopfhörer
+      volume(icon: "headphones", muted: $phonesMuted, value: $phones, help: "Kopfhörer")
+
+      // Zahnrad: Audio-Einstellungen
+      Button { showSettings.toggle() } label: {
+        Image(systemName: "gearshape")
+          .font(Schrift.normal)
+          .foregroundStyle(showSettings ? Theme.meterBlue : Theme.text)
+          .frame(width: 24, height: 24)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .focusEffectDisabled()
+      .help("Audio-Einstellungen")
+      .popover(isPresented: $showSettings, arrowEdge: .bottom) {
+        AudioSettingsPopup(
+          useRadio: Binding(get: { audioOut == .radio },
+                            set: { audioOut = $0 ? .radio : .mac }),
+          lineout: $speaker, lineoutOn: Binding(get: { !speakerMuted }, set: { speakerMuted = !$0 }),
+          headset: $phones, headsetOn: Binding(get: { !phonesMuted }, set: { phonesMuted = !$0 }))
+      }
+
+      // Aufnahme – rot, solange aufgenommen wird
+      TagButton(title: recording ? "● Rec" : "Rec", isOn: recording, onColor: Theme.txOn) {
+        recording.toggle()
+      }
+      .help("Aufnahme: Quelle im Zahnrad-Menü wählen")
+
+      Spacer(minLength: 0)
+
+      // Aktiver Slice
+      HStack(spacing: 8) {
+        Text("A")
+          .font(Schrift.normalFett)
+          .foregroundStyle(.white)
+          .frame(width: 22, height: 20)
+          .background(RoundedRectangle(cornerRadius: 3).fill(Theme.accent))
+        Text(RXBlock.format(14_200_000))
+          .font(Schrift.gross.monospacedDigit())
+        Text("USB · 20 m")
+          .foregroundStyle(Theme.textDim)
+      }
+
+      Spacer(minLength: 0)
+
+      // Audio-Weg: über das Radio oder über den Mac
+      HStack(spacing: 4) {
+        Text("Audio:")
+          .foregroundStyle(Theme.textDim)
+        ForEach(AudioOut.allCases) { out in
+          TagButton(title: out.rawValue, isOn: audioOut == out) { audioOut = out }
+        }
+      }
+
+      // Verbindung zum Radio
+      TagButton(title: connected ? "Trennen" : "Verbinden", isOn: connected) {
+        connected.toggle()
+      }
+    }
+    .font(Schrift.normal)
+    .padding(.horizontal, 14)
+    .frame(height: 40)
+    .background(Theme.bar)
+  }
+
+  /// Symbol (Klick = stumm) + kurzer Lautstärkeregler
+  private func volume(icon: String, muted: Binding<Bool>, value: Binding<Double>, help: String) -> some View {
+    HStack(spacing: 6) {
+      Button { muted.wrappedValue.toggle() } label: {
+        Image(systemName: icon)
+          .font(Schrift.normal)
+          .foregroundStyle(muted.wrappedValue ? Theme.meterRed : Theme.text)
+          .frame(width: 22, height: 22)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .focusEffectDisabled()
+      .help("\(help): Klick = stumm")
+      Slider(value: value, in: 0...100)
+        .controlSize(.small)
+        .frame(width: 110)
+        .disabled(muted.wrappedValue)
+    }
+  }
+}
+
+// MARK: - Zahnrad-Popup: Audio-Einstellungen
+struct AudioSettingsPopup: View {
+  enum Buffer: String, CaseIterable, Identifiable {
+    case small = "Klein", medium = "Mittel", large = "Groß"
+    var id: String { rawValue }
+  }
+  enum RecSource: String, CaseIterable, Identifiable {
+    case tx = "Sendeton (nach Audiokette)"
+    case rx = "Empfang"
+    case both = "Beides"
+    var id: String { rawValue }
+  }
+
+  @Binding var useRadio: Bool
+  @Binding var lineout: Double
+  @Binding var lineoutOn: Bool
+  @Binding var headset: Double
+  @Binding var headsetOn: Bool
+
+  // Vorerst feste Listen – später liest xSDR64 die echten Geräte vom Mac
+  @State private var outputDevice = "MacBook Pro-Lautsprecher"
+  @State private var inputDevice = "MacBook Pro-Mikrofon"
+  @State private var buffer: Buffer = .medium
+  @State private var listenOnly = false
+  @State private var recSource: RecSource = .tx
+  @State private var tnfGlobal = false
+  private let outputs = ["MacBook Pro-Lautsprecher", "RME Fireface UCX II"]
+  private let inputs = ["MacBook Pro-Mikrofon", "RME Fireface UCX II"]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      section("Mac-Audio") {
+        row("Ausgabe:") {
+          Picker("", selection: $outputDevice) { ForEach(outputs, id: \.self) { Text($0) } }
+            .labelsHidden()
+        }
+        row("Puffer:") {
+          Picker("", selection: $buffer) { ForEach(Buffer.allCases) { Text($0.rawValue).tag($0) } }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+        row("Eingang:") {
+          Picker("", selection: $inputDevice) { ForEach(inputs, id: \.self) { Text($0) } }
+            .labelsHidden()
+            .disabled(listenOnly)
+        }
+        Toggle("Nur hören (kein Mac-Eingang)", isOn: $listenOnly)
+          .toggleStyle(.checkbox)
+      }
+
+      section("Radio-Audio") {
+        Toggle("Ausgabe über das Radio (statt Mac)", isOn: $useRadio)
+          .toggleStyle(.checkbox)
+        volumeRow("Lineout:", value: $lineout, isOn: $lineoutOn)
+        volumeRow("Kopfhörer:", value: $headset, isOn: $headsetOn)
+      }
+
+      section("Aufnahme (Rec)") {
+        row("Quelle:") {
+          Picker("", selection: $recSource) { ForEach(RecSource.allCases) { Text($0.rawValue).tag($0) } }
+            .labelsHidden()
+        }
+      }
+
+      Toggle("TNFs global aktivieren", isOn: $tnfGlobal)
+        .toggleStyle(.checkbox)
+    }
+    .font(Schrift.normal)
+    .padding(16)
+    .frame(width: 400)
+  }
+
+  /// Abschnitt mit kleiner Überschrift und abgesetztem Hintergrund
+  private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(title)
+        .font(Schrift.kleinFett)
+        .foregroundStyle(Theme.textDim)
+      VStack(alignment: .leading, spacing: 10) { content() }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.05)))
+    }
+  }
+
+  /// Zeile: Bezeichnung – Bedienelement
+  private func row<Content: View>(_ label: String, @ViewBuilder _ content: () -> Content) -> some View {
+    HStack(spacing: 10) {
+      Text(label).frame(width: 80, alignment: .leading)
+      content()
+    }
+  }
+
+  /// Zeile: Bezeichnung – Regler – Häkchen (ein/aus)
+  private func volumeRow(_ label: String, value: Binding<Double>, isOn: Binding<Bool>) -> some View {
+    HStack(spacing: 10) {
+      Text(label).frame(width: 80, alignment: .leading)
+      Slider(value: value, in: 0...100).controlSize(.small)
+      Toggle("", isOn: isOn).toggleStyle(.checkbox).labelsHidden()
+    }
+  }
+}

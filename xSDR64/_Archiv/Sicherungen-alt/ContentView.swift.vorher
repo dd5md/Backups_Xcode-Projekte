@@ -1,0 +1,121 @@
+import AppKit
+import SwiftUI
+
+/// Das Hauptfenster: oben Leiste, Mitte Audiokette | Spektrum | Seitenleiste, unten Statusleiste
+struct ContentView: View {
+    /// Merker wie "setupOffen" in xTune64: ist das jeweilige Panel ausgefahren?
+    @State private var leftOpen = false      // Audiokette links, startet eingefahren
+    @State private var rightOpen = true      // Seitenleiste rechts, startet ausgefahren
+    /// Audiokette (aus xHost64) – lebt so lange wie das Fenster
+    private let host = AudioWelt.shared.host
+    private let catalog = AudioWelt.shared.catalog
+
+    var body: some View {
+        VStack(spacing: 0) {
+            TopBar()
+            HStack(spacing: 6) {
+                if leftOpen {
+                    AudioPanel(host: host, catalog: catalog)
+                        .transition(.move(edge: .leading))    // gleitet nach links raus
+                }
+                EdgeHandle(side: .left, isOpen: $leftOpen)
+                PanadapterArea(audioOpen: $leftOpen)
+                EdgeHandle(side: .right, isOpen: $rightOpen)
+                if rightOpen {
+                    Sidebar()
+                        .transition(.move(edge: .trailing))   // gleitet nach rechts raus
+                }
+            }
+            .padding(6)
+            StatusBar()
+        }
+        .background(Theme.window)
+        .foregroundStyle(Theme.text)
+        .animation(.easeInOut(duration: 0.25), value: leftOpen)
+        .animation(.easeInOut(duration: 0.25), value: rightOpen)
+        .onAppear {
+            host.mitAppVerbinden()   // Plugin-Fenster und Beenden – siehe Audiokette/AudioHost+App.swift
+            DispatchQueue.main.async { FensterLage.anmelden() }   // Fensterlage vom letzten Mal
+            RadioVerbindung.shared.starten()   // Radio im Netz suchen, letztes Radio verbinden
+        }
+    }
+}
+
+// MARK: - Griff am Rand zum Ein-/Ausfahren eines Panels
+struct EdgeHandle: View {
+    enum Side { case left, right }
+
+    let side: Side
+    @Binding var isOpen: Bool
+    @State private var hovering = false      // ist die Maus gerade über dem Griff?
+
+    /// Der Pfeil zeigt immer in die Richtung, in die sich das Panel bewegt
+    private var symbol: String {
+        switch side {
+        case .left:  return isOpen ? "chevron.left"  : "chevron.right"
+        case .right: return isOpen ? "chevron.right" : "chevron.left"
+        }
+    }
+
+    var body: some View {
+        Button { isOpen.toggle() } label: {
+            Image(systemName: symbol)
+                .font(Schrift.kleinFett)
+                .frame(width: 16)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())   // ganze Fläche ist klickbar
+        }
+        .buttonStyle(.plain)
+        .background(hovering ? Theme.border : Theme.bar)   // heller bei Maus darüber
+        .overlay(Rectangle().stroke(Theme.border))
+        .onHover { hovering = $0 }
+        .focusEffectDisabled()
+        .help(isOpen ? "Einfahren" : "Ausfahren")
+    }
+}
+
+// MARK: - Panadapter + Wasserfall
+struct PanadapterArea: View {
+    @Binding var audioOpen: Bool     // für den Audio-Knopf unten in der Knopfleiste
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Knopfleiste links, über die ganze Höhe
+            PanadapterToolbar(audioOpen: $audioOpen)
+            GeometryReader { geo in
+                // Slice-Position: vorerst fest bei 45 % der Breite
+                let sliceX = geo.size.width * 0.45
+                let passband = geo.size.width * 0.05     // Filterbreite als Fläche
+                ZStack(alignment: .topLeading) {
+                    VStack(spacing: 0) {
+                        Theme.panadapter
+                            .frame(height: geo.size.height * 0.6)
+                            .overlay(Text("Panadapter"))
+                        Theme.waterfall
+                            .overlay(Text("Wasserfall"))
+                    }
+                    // Durchlassbereich des Filters (USB: rechts der Linie)
+                    Rectangle()
+                        .fill(Color.white.opacity(0.10))
+                        .frame(width: passband, height: geo.size.height)
+                        .offset(x: sliceX)
+                    // Slice-Linie
+                    Rectangle()
+                        .fill(Color.yellow)
+                        .frame(width: 1, height: geo.size.height)
+                        .offset(x: sliceX)
+                    // Flagge hängt links an der Linie
+                    SliceFlag()
+                        .offset(x: sliceX - SliceFlag.width, y: 16)
+                }
+            }
+        }
+        .clipped()
+        .border(Theme.border)
+    }
+}
+
+#Preview {
+    ContentView()
+        .frame(width: 1440, height: 900)
+}

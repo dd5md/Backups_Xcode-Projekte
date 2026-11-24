@@ -1,0 +1,300 @@
+import ApiPackage
+import AVFoundation
+import Observation
+import Synchronization
+
+// MARK: - Empfang (UDP-Queue)
+
+/// Ton für den Loopback: Empfang (DAX RX, fester Pegel – unabhängig von der Hör-Lautstärke)
+/// und Sendeton (DAX MIC = was am Mikrofon-Eingang des Radios ankommt, bei dir: Ausgang der Audiokette).
+nonisolated final class LoopbackEmpfang: @unchecked Sendable {
+  static let shared = LoopbackEmpfang()
+
+  let rxRing = AudioRing(frames: 24_000)
+  let txRing = AudioRing(frames: 24_000)
+  let rxStream = Atomic<UInt32>(0)
+  let txStream = Atomic<UInt32>(0)
+  private let rxSpitze = Atomic<UInt32>(0)
+  private let txSpitze = Atomic<UInt32>(0)
+  /// Verstärkung Empfang als Faktor (Float-Bits), fest eingestellt im Loopback-Fenster
+  let rxFaktor = Atomic<UInt32>(Float(1).bitPattern)
+  private var puffer = [Float](repeating: 0, count: 4096)
+
+  func paket(_ id: UInt32, _ p: [UInt8]) {
+    guard id != 0 else { return }
+    let istRx = id == rxStream.load(ordering: .relaxed)
+    let istTx = id == txStream.load(ordering: .relaxed)
+    guard istRx || istTx else { return }
+    let werte = p.count / 4
+    guard werte >= 2 else { return }
+    if puffer.count < werte { puffer = [Float](repeating: 0, count: werte) }
+    var spitze: Float = 0
+    let faktor = istRx ? Float(bitPattern: rxFaktor.load(ordering: .relaxed)) : 1
+    p.withUnsafeBytes { roh in
+      for i in 0..<werte {
+        let v = min(1, max(-1, faktor * Float(bitPattern: UInt32(bigEndian: roh.loadUnaligned(fromByteOffset: i * 4, as: UInt32.self)))))
+        puffer[i] = v
+        spitze = max(spitze, abs(v))
+      }
+    }
+    puffer.withUnsafeBufferPointer { (istRx ? rxRing : txRing).schreibe($0.baseAddress!, frames: werte / 2) }
+    if istRx { Self.merke(spitze, in: rxSpitze) } else { Self.merke(spitze, in: txSpitze) }
+  }
+
+  /// Höchsten Wert seit der letzten Abfrage festhalten (ohne Sperre)
+  private static func merke(_ spitze: Float, in ziel: borrowing Atomic<UInt32>) {
+    var alt = ziel.load(ordering: .relaxed)
+    while Float(bitPattern: alt) < spitze {
+      let (ok, jetzt) = ziel.compareExchange(expected: alt, desired: spitze.bitPattern, ordering: .relaxed)
+      if ok { break }
+      alt = jetzt
+    }
+  }
+
+  func holeSpitzen() -> (rx: Float, tx: Float) {
+    (Float(bitPattern: rxSpitze.exchange(0, ordering: .relaxed)),
+     Float(bitPattern: txSpitze.exchange(0, ordering: .relaxed)))
+  }
+}
+
+// MARK: - Loopback-Ausgabe
+
+/// Spielt Empfang und/oder Sendeton mit festem Pegel (1:1) in ein Audiogerät –
+/// normalerweise „xSDR64 Loopback“, das ein Aufnahmeprogramm als Eingang nimmt.
+/// Läuft unabhängig von „Audio: Radio/Mac“ und von der Hör-Lautstärke.
+@MainActor
+@Observable
+final class Loopback {
+  static let shared = Loopback()
+
+  enum Quelle: Int, CaseIterable, Identifiable {
+    case empfang = 0, sendeton = 1, beides = 2
+    var id: Int { rawValue }
+    var name: String { ["Empfang", "Sendeton", "Empfang + Sendeton"][rawValue] }
+    var mitEmpfang: Bool { self != .sendeton }
+    var mitSendeton: Bool { self != .empfang }
+  }
+
+  static let treiberUID = "xSDR64Loopback_UID"
+  private let speicher = UserDefaults.standard
+
+  var aktiv: Bool { didSet { speicher.set(aktiv, forKey: "loopbackAktiv"); anwenden() } }
+  var quelle: Quelle { didSet { speicher.set(quelle.rawValue, forKey: "loopbackQuelle"); neuStarten() } }
+  var ausgabeUID: String { didSet { speicher.set(ausgabeUID, forKey: "loopbackAusgabe"); neuStarten() } }
+  /// Verstärkung Empfang in dB (0…+30), fest – unabhängig von der Hör-Lautstärke
+  /// DAX-Kanal für die Aufnahme: 0 = automatisch (Slice, der auf DAX liegt), sonst fest 1…4
+  var kanal: Int { didSet { speicher.set(kanal, forKey: "loopbackKanal"); neuStarten() } }
+  var rxPegel: Double { didSet { speicher.set(rxPegel, forKey: "loopbackRxDb"); pegelSenden() } }
+
+  private(set) var laeuft = false
+  private(set) var status = "aus"
+  private(set) var pegelRx: Float = -60   // dBFS für die Anzeige
+  private(set) var pegelTx: Float = -60
+
+  private let engine = AVAudioEngine()
+  private var knoten: [AVAudioSourceNode] = []
+  private var uhr: Timer?
+  private var rxSelbstAngelegt = false
+  private var pruefZaehler = 0
+  private var richtetEin = false
+  private var txSelbstAngelegt = false
+  private var radio: RadioVerbindung { RadioVerbindung.shared }
+
+  private init() {
+    aktiv = UserDefaults.standard.bool(forKey: "loopbackAktiv")
+    quelle = Quelle(rawValue: UserDefaults.standard.integer(forKey: "loopbackQuelle")) ?? .empfang
+    ausgabeUID = UserDefaults.standard.string(forKey: "loopbackAusgabe") ?? Loopback.treiberUID
+    kanal = UserDefaults.standard.integer(forKey: "loopbackKanal")
+    rxPegel = UserDefaults.standard.object(forKey: "loopbackRxDb") as? Double ?? 12
+    pegelSenden()
+  }
+
+  /// Alle Mac-Geräte mit Ausgang
+  var ausgaben: [AudioDevice] { AudioDevices.all().filter { $0.outputChannels > 0 } }
+  var treiberInstalliert: Bool { ausgaben.contains { $0.uid == Self.treiberUID } }
+
+  /// Nach Verbinden, Trennen oder Umschalten
+  func anwenden() {
+    if aktiv && radio.istVerbunden { starten() } else { stoppen() }
+  }
+
+  private func neuStarten() {
+    guard laeuft else { return }
+    stoppen()
+    starten()
+  }
+
+  private func starten() {
+    guard !laeuft else { return }
+    guard let geraet = ausgaben.first(where: { $0.uid == ausgabeUID }) else {
+      status = "Gerät nicht gefunden – Treiber installiert?"
+      return
+    }
+    // Wiedergabe: zwei Quellen (Empfang, Sendeton) → Mixer → gewähltes Gerät, Lautstärke fest 1
+    LoopbackEmpfang.shared.rxRing.leeren()
+    LoopbackEmpfang.shared.txRing.leeren()
+    try? engine.outputNode.auAudioUnit.setDeviceID(geraet.id)
+    let format = AVAudioFormat(standardFormatWithSampleRate: 24_000, channels: 2)!
+    var ringe: [AudioRing] = []
+    if quelle.mitEmpfang { ringe.append(LoopbackEmpfang.shared.rxRing) }
+    if quelle.mitSendeton { ringe.append(LoopbackEmpfang.shared.txRing) }
+    for ring in ringe {
+      let n = AVAudioSourceNode(format: format, renderBlock: MacAudio.renderBlock(ring, start: 960, maximal: 2880))
+      engine.attach(n)
+      engine.connect(n, to: engine.mainMixerNode, format: format)
+      knoten.append(n)
+    }
+    engine.mainMixerNode.outputVolume = 1   // fest 1:1
+    do {
+      try engine.start()
+    } catch {
+      aufraeumen()
+      status = "Start fehlgeschlagen: \(error.localizedDescription)"
+      return
+    }
+    laeuft = true
+    status = "verbinde …"
+    streamsAnlegen()
+    uhr = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+      MainActor.assumeIsolated { Loopback.shared.messen() }
+    }
+  }
+
+  private func stoppen() {
+    uhr?.invalidate()
+    uhr = nil
+    if radio.istVerbunden {
+      if rxSelbstAngelegt {
+        for s in radio.api.daxRxAudios where s.id == LoopbackEmpfang.shared.rxStream.load(ordering: .relaxed) {
+          radio.sende("stream remove 0x\(String(s.id, radix: 16, uppercase: true))")
+        }
+      }
+      // DAX MIC nur entfernen, wenn ihn nicht das Netz-Mikrofon braucht
+      if txSelbstAngelegt, !MicNetz.shared.aktiv, let id = radio.api.daxMicAudio?.id {
+        radio.sende("stream remove 0x\(String(id, radix: 16, uppercase: true))")
+      }
+    }
+    rxSelbstAngelegt = false
+    txSelbstAngelegt = false
+    LoopbackEmpfang.shared.rxStream.store(0, ordering: .relaxed)
+    LoopbackEmpfang.shared.txStream.store(0, ordering: .relaxed)
+    aufraeumen()
+    laeuft = false
+    pegelRx = -60
+    pegelTx = -60
+    if status != "Gerät nicht gefunden – Treiber installiert?" { status = "aus" }
+  }
+
+  private func aufraeumen() {
+    engine.stop()
+    for n in knoten { engine.detach(n) }
+    knoten.removeAll()
+  }
+
+  /// DAX-Ströme im Radio anlegen und warten, bis sie gemeldet werden.
+  /// Läuft bis zu 15 s, weil direkt nach dem Verbinden der Slice oft noch nicht gemeldet ist.
+  private func streamsAnlegen() {
+    richtetEin = true
+    let api = radio.api
+    let mitRx = quelle.mitEmpfang, mitTx = quelle.mitSendeton
+    var rxAngefragt = false, txAngefragt = false
+    Task {
+      for _ in 0..<150 {
+        guard laeuft else { richtetEin = false; return }
+        var fertig = true
+        if mitRx {
+          // Aufnahme-Slice: einer, der schon auf einem DAX-Kanal liegt (z. B. B bei Full Duplex),
+          // sonst der aktive
+          if self.kanal > 0 {
+            // fester Kanal: nur den Strom dafür anlegen, Slices nicht anfassen
+            let kanal = self.kanal
+            if let s = api.daxRxAudios.first(where: { $0.daxChannel == kanal && $0.clientHandle == api.connectionHandle }) {
+              if LoopbackEmpfang.shared.rxStream.load(ordering: .relaxed) != s.id {
+                LoopbackEmpfang.shared.rxStream.store(s.id, ordering: .relaxed)
+                pegelSenden()
+              }
+            } else {
+              fertig = false
+              if !rxAngefragt {
+                radio.sende("stream create type=dax_rx dax_channel=\(kanal)")
+                rxSelbstAngelegt = true
+                rxAngefragt = true
+              }
+            }
+          } else if let slice = radio.eigeneSlices.first(where: { $0.daxChannel > 0 }) ?? radio.meinSlice {
+            // Slice auf einen DAX-Kanal legen (vorhandenen nutzen, sonst 1)
+            let kanal = slice.daxChannel > 0 ? slice.daxChannel : 1
+            if slice.daxChannel == 0 && !rxAngefragt { radio.setze(slice, "dax", String(kanal)) }
+            if let s = api.daxRxAudios.first(where: { $0.daxChannel == kanal && $0.clientHandle == api.connectionHandle }) {
+              if LoopbackEmpfang.shared.rxStream.load(ordering: .relaxed) != s.id {
+                LoopbackEmpfang.shared.rxStream.store(s.id, ordering: .relaxed)
+                pegelSenden()
+              }
+            } else {
+              fertig = false
+              if !rxAngefragt {
+                radio.sende("stream create type=dax_rx dax_channel=\(kanal)")
+                rxSelbstAngelegt = true
+                rxAngefragt = true
+              }
+            }
+          } else { fertig = false }
+        }
+        if mitTx {
+          if let id = api.daxMicAudio?.id {
+            LoopbackEmpfang.shared.txStream.store(id, ordering: .relaxed)
+          } else {
+            fertig = false
+            if !txAngefragt {
+              radio.sende("stream create type=dax_mic")
+              txSelbstAngelegt = true
+              txAngefragt = true
+            }
+          }
+        }
+        if fertig {
+          status = "läuft – \(quelle.name) → \(ausgaben.first { $0.uid == ausgabeUID }?.name ?? "?")"
+          richtetEin = false
+          return
+        }
+        status = radio.meinSlice == nil && mitRx ? "warte auf Slice …" : "verbinde …"
+        try? await Task.sleep(for: .milliseconds(100))
+      }
+      status = "Radio hat den DAX-Strom nicht gemeldet – versuche es weiter …"
+      richtetEin = false   // der Wachhund versucht es in einer Sekunde erneut
+    }
+  }
+
+  /// Verstärkung an den Empfang weitergeben (wirkt sofort, digital in xSDR64)
+  private func pegelSenden() {
+    LoopbackEmpfang.shared.rxFaktor.store(Float(pow(10, rxPegel / 20)).bitPattern, ordering: .relaxed)
+  }
+
+  private func messen() {
+    // eigener Wachhund (jede Sekunde): Strom weg, z. B. weil ein Profil die Slices neu aufgebaut hat?
+    pruefZaehler += 1
+    if pruefZaehler >= 20, laeuft, !richtetEin {
+      pruefZaehler = 0
+      let api = radio.api
+      let rxId = LoopbackEmpfang.shared.rxStream.load(ordering: .relaxed)
+      let rxStrom = api.daxRxAudios.first { $0.id == rxId }
+      // Strom weg – oder kein Slice liegt mehr auf seinem Kanal (Profil hat DAX umgestellt)
+      let rxFehlt = quelle.mitEmpfang
+        && (rxStrom == nil || (kanal == 0 && !radio.eigeneSlices.contains { $0.daxChannel == rxStrom!.daxChannel }))
+      let txFehlt = quelle.mitSendeton
+        && api.daxMicAudio?.id != LoopbackEmpfang.shared.txStream.load(ordering: .relaxed)
+      if rxFehlt || txFehlt {
+        Diagnose.log("Loopback: DAX-Strom weg (Profilwechsel?) – richte neu ein")
+        LoopbackEmpfang.shared.rxStream.store(0, ordering: .relaxed)
+        LoopbackEmpfang.shared.txStream.store(0, ordering: .relaxed)
+        rxSelbstAngelegt = false
+        txSelbstAngelegt = false
+        streamsAnlegen()
+      }
+    }
+    let s = LoopbackEmpfang.shared.holeSpitzen()
+    func db(_ v: Float) -> Float { v > 0 ? 20 * log10(v) : -60 }
+    pegelRx = max(-60, max(db(s.rx), pegelRx - 1.5))
+    pegelTx = max(-60, max(db(s.tx), pegelTx - 1.5))
+  }
+}

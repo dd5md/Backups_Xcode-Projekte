@@ -1,0 +1,877 @@
+xSDR64 Diagnose
+[5:00:51] Ketten geladen: 1, eingeschaltet: DD5MD
+[5:00:51] RC-28 angesteckt
+[5:00:51] App: jetzt im Vordergrund
+[5:00:51] Radio-Suche: Port 4992 offen
+[5:00:51] Radio-Suche: automatisches Verbinden ist ausgeschaltet
+[5:00:51] Plugin geladen: MJUC (Klanghelm) – geschützt (eigener Prozess)
+[5:00:51] Plugin geladen: xGain64 (DD5MD) – geschützt (eigener Prozess)
+[5:00:51] Plugin geladen: TB Equalizer Pro (ToneBoosters) – geschützt (eigener Prozess)
+[5:00:51] Plugin geladen: TB_Barricade_v4 (ToneBoosters) – geschützt (eigener Prozess)
+[5:00:51] Plugin geladen: TB Equalizer Pro (ToneBoosters) – geschützt (eigener Prozess)
+[5:00:51] Netzteil-Messung: Arduino antwortet (14.17 V)
+[5:00:52] Audiokette lief beim letzten Mal – starte sie wieder
+[5:00:53] App: jetzt im Hintergrund
+[5:00:54] ——— Engine-Start (Versuch 1), Kette: DD5MD ———
+[5:00:54] Ausgabegerät: Fireface UCX II (24259086) id=138 uid=RMEUSBDevice-130-24259086 ein=8 aus=8
+[5:00:54] Einstellung: 48000.0 Hz, Puffer 128, Eingänge [4], Ausgänge [2], eingerichtet=true, stumm=false
+[5:00:54] Mikrofon-Erlaubnis: 3 (3 = erlaubt)
+[5:00:54] Vorher: Eingang-Gerät 173, Ausgang-Gerät 173
+[5:00:54] Nachher: Eingang-Gerät 138, Ausgang-Gerät 138
+[5:00:54] Eingang laut Engine: <AVAudioFormat 0x79a4808af0:  1 ch,  48000 Hz, Float32>, Hardware: <AVAudioFormat 0x79a4809a90:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:00:54] Ausgang Hardware-Format: <AVAudioFormat 0x79a48085f0:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:00:54] Eingangsformat (vorgegeben): <AVAudioFormat 0x79a4809540:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:00:54] Kette: TB Equalizer Pro an
+[5:00:54] Kette: MJUC an
+[5:00:54] Kette: TB Equalizer Pro an
+[5:00:54] Kette: xGain64 an
+[5:00:54] Kette: TB_Barricade_v4 an
+[5:00:54] Mixer→Ausgang Format: <AVAudioFormat 0x79a480a580:  2 ch,  48000 Hz, Float32, deinterleaved>
+[5:00:54] Kanal-Zuordnung Ausgang [-1, -1, 0, -1, -1, -1, -1, -1] → Status 0
+[5:00:55] Engine läuft: true
+[5:00:55] App: jetzt im Vordergrund
+[5:00:55] Loopback: richte ein (Quelle Receive, Kanal 1)
+[5:00:55] Profil global: Radio meldet current="80M_DD5MD"
+[5:00:56] Loopback: läuft nach 0.3 s
+[5:00:56] Autostart: starte /Applications/xCat64.app
+[5:00:56] Spektrum: 5 Bilder in 5 s (10 Pakete, 0 ungültig, 0 lückenhaft)
+[5:00:56] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere aus, Radio-AUTO aus | AF 25 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:00:57] Nach 2.0 s: Eingang-Aufrufe 756 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 756 (je 128 Samples), erfolgreich 755, Aussetzer 1, Mix-Spitze 1.4662743e-05, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[5:00:58] Loopback: einmaliger automatischer Neustart nach dem Verbinden
+[5:00:58] Loopback: richte ein (Quelle Receive, Kanal 1)
+[5:00:58] Loopback: läuft nach 0.0 s
+[5:00:58] Autostart: starte /Applications/xTune64.app
+[5:01:00] Nach 5.0 s: Eingang-Aufrufe 1880 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 1881 (je 128 Samples), erfolgreich 1880, Aussetzer 1, Mix-Spitze 2.3841858e-06, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[5:01:00] Autostart: starte /Applications/xAcom64.app
+[5:01:01] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere aus, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:01:01] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:06] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:11] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:16] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:16] Filter: Slice 0, Betriebsart LSB, -2450 bis -50 Hz
+[5:01:20] Filter: Slice 0, Betriebsart LSB, -3150 bis -50 Hz
+[5:01:21] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:26] Mac-Audio: MNR jetzt an, Audio Radio, Stärke 5 %
+[5:01:26] Mac-Audio: Audio jetzt Mac, MNR an
+[5:01:26] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:26] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere aus, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:01:31] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:31] MNR-Kontrolle: Eingang -77.8 dBFS, nach dem Filter -102.4 dBFS, Absenkung 24.6 dB (Stärke 97 %, Mac-Verstärkung 36 dB)
+[5:01:34] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere aus, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 6 %, NR aus
+[5:01:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:36] MNR-Kontrolle: Eingang -70.4 dBFS, nach dem Filter -82.6 dBFS, Absenkung 12.2 dB (Stärke 6 %, Mac-Verstärkung 36 dB)
+[5:01:41] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere aus, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:01:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:41] MNR-Kontrolle: Eingang -76.9 dBFS, nach dem Filter -89.7 dBFS, Absenkung 12.8 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:01:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:46] MNR-Kontrolle: Eingang -77.9 dBFS, nach dem Filter -55.8 dBFS, Absenkung -22.1 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:01:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:01:51] MNR-Kontrolle: Eingang -53.9 dBFS, nach dem Filter -53.7 dBFS, Absenkung -0.2 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:01:56] MNR-Kontrolle: Eingang -55.1 dBFS, nach dem Filter -51.5 dBFS, Absenkung -3.5 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:01:56] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:01] Ton: 80 m 3.743 MHz LSB | AGC med T=15, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:02:01] MNR-Kontrolle: Eingang -77.9 dBFS, nach dem Filter -79.5 dBFS, Absenkung 1.6 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:01] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:06] MNR-Kontrolle: Eingang -79.5 dBFS, nach dem Filter -87.2 dBFS, Absenkung 7.7 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:06] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:10] AGC-T Auto: Rauschpegel -77.4 dBm (21 Werte) → AGC-T 12
+[5:02:11] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:02:11] MNR-Kontrolle: Eingang -57.6 dBFS, nach dem Filter -59.2 dBFS, Absenkung 1.6 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:11] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:16] MNR-Kontrolle: Eingang -54.1 dBFS, nach dem Filter -55.0 dBFS, Absenkung 0.9 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:16] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:21] MNR-Kontrolle: Eingang -78.9 dBFS, nach dem Filter -69.1 dBFS, Absenkung -9.7 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:21] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:26] MNR-Kontrolle: Eingang -57.5 dBFS, nach dem Filter -67.9 dBFS, Absenkung 10.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:26] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:31] MNR-Kontrolle: Eingang -80.5 dBFS, nach dem Filter -89.7 dBFS, Absenkung 9.2 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:31] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:36] MNR-Kontrolle: Eingang -74.1 dBFS, nach dem Filter -89.6 dBFS, Absenkung 15.5 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:41] MNR-Kontrolle: Eingang -55.7 dBFS, nach dem Filter -55.3 dBFS, Absenkung -0.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:46] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:02:46] MNR-Kontrolle: Eingang -72.2 dBFS, nach dem Filter -92.8 dBFS, Absenkung 20.5 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:51] MNR-Kontrolle: Eingang -74.1 dBFS, nach dem Filter -78.6 dBFS, Absenkung 4.6 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:02:56] MNR-Kontrolle: Eingang -78.3 dBFS, nach dem Filter -91.2 dBFS, Absenkung 13.0 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:02:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:01] MNR-Kontrolle: Eingang -79.6 dBFS, nach dem Filter -74.3 dBFS, Absenkung -5.4 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:06] MNR-Kontrolle: Eingang -76.5 dBFS, nach dem Filter -78.8 dBFS, Absenkung 2.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:11] MNR-Kontrolle: Eingang -70.4 dBFS, nach dem Filter -69.0 dBFS, Absenkung -1.4 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:16] MNR-Kontrolle: Eingang -81.4 dBFS, nach dem Filter -91.2 dBFS, Absenkung 9.8 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:21] MNR-Kontrolle: Eingang -80.6 dBFS, nach dem Filter -79.3 dBFS, Absenkung -1.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:23] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:03:26] MNR-Kontrolle: Eingang -64.5 dBFS, nach dem Filter -68.8 dBFS, Absenkung 4.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:26] Rotor Antwort roh: "+0270\r\n"
+[5:03:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:27] Rotor Antwort roh: "+0270\r\n"
+[5:03:28] Rotor Antwort roh: "+0270\r\n"
+[5:03:31] MNR-Kontrolle: Eingang -61.8 dBFS, nach dem Filter -76.1 dBFS, Absenkung 14.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:36] MNR-Kontrolle: Eingang -60.6 dBFS, nach dem Filter -61.6 dBFS, Absenkung 1.0 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:37] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:41] MNR-Kontrolle: Eingang -66.8 dBFS, nach dem Filter -74.0 dBFS, Absenkung 7.2 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:42] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:46] MNR-Kontrolle: Eingang -68.4 dBFS, nach dem Filter -77.1 dBFS, Absenkung 8.7 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:47] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:51] MNR-Kontrolle: Eingang -79.7 dBFS, nach dem Filter -92.0 dBFS, Absenkung 12.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:52] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:03:56] MNR-Kontrolle: Eingang -71.2 dBFS, nach dem Filter -80.8 dBFS, Absenkung 9.5 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:03:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:01] MNR-Kontrolle: Eingang -65.6 dBFS, nach dem Filter -67.0 dBFS, Absenkung 1.4 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:04:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:05] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:04:06] MNR-Kontrolle: Eingang -81.4 dBFS, nach dem Filter -92.1 dBFS, Absenkung 10.7 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:04:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:11] MNR-Kontrolle: Eingang -78.0 dBFS, nach dem Filter -90.0 dBFS, Absenkung 12.0 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:04:11] Mac-Audio: MNR jetzt aus, Audio Mac, Stärke 5 %
+[5:04:11] Mac-Audio: Audio jetzt Radio, MNR aus
+[5:04:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:15] Mac-Audio: MNR jetzt an, Audio Radio, Stärke 5 %
+[5:04:15] Mac-Audio: Audio jetzt Mac, MNR an
+[5:04:16] Mac-Audio: MNR jetzt aus, Audio Mac, Stärke 5 %
+[5:04:16] Mac-Audio: Audio jetzt Radio, MNR aus
+[5:04:16] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:04:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:37] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:42] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:45] App: jetzt im Hintergrund
+[5:04:47] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:51] Spektrum TX: Anzeige 80 m auf -145…-40 dBm (Radio bleibt -125…-20)
+[5:04:51] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:04:52] Spektrum TX: Anzeige gleitet zurück auf -125…-20 dBm
+[5:04:52] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:04:55] Spektrum TX: Anzeige 80 m auf -145…-40 dBm (Radio bleibt -125…-20)
+[5:04:57] Spektrum TX: Anzeige gleitet zurück auf -125…-20 dBm
+[5:04:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:04] Spektrum TX: Anzeige 80 m auf -145…-40 dBm (Radio bleibt -125…-20)
+[5:05:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:18] Spektrum TX: Anzeige gleitet zurück auf -125…-20 dBm
+[5:05:21] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:05:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:24] App: jetzt im Vordergrund
+[5:05:26] App: jetzt im Hintergrund
+[5:05:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:30] App: jetzt im Vordergrund
+[5:05:30] App: jetzt im Vordergrund
+[5:05:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:37] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:42] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:47] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:52] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:05:56] Ton: 80 m 3.743 MHz LSB | AGC med T=12, AUTO unsere AN, Radio-AUTO aus | AF 25 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:05:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:01] Profil global: Radio meldet current="17M_DD5MD"
+[5:06:03] Profil global: Radio meldet current="20M_DD5MD"
+[5:06:03] Langsame Antwort vom Radio: 1161 ms auf „display pan set 0x40000000 xpixels=1389“
+[5:06:03] Langsame Antwort vom Radio: 1161 ms auf „display pan set 0x40000000 ypixels=747“
+[5:06:03] Spektrum: 73 Bilder in 5 s (219 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:03] Langsame Antwort vom Radio: 1003 ms auf „display pan set 0x40000000 xpixels=1389“
+[5:06:03] Langsame Antwort vom Radio: 1008 ms auf „display pan set 0x40000000 ypixels=747“
+[5:06:06] Ton: 20 m 14.235 MHz USB | AGC med T=20, AUTO unsere AN, Radio-AUTO aus | AF 30 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:06:08] Spektrum: 109 Bilder in 5 s (317 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:13] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:13] AGC-T Auto: Rauschpegel -95.4 dBm (21 Werte) → AGC-T 29
+[5:06:16] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:06:18] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:21] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:06:23] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:28] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:33] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:38] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:43] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:48] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:51] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:06:53] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:06:58] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:03] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:08] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:13] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:18] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:23] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:26] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:07:28] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:33] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:38] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:43] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:48] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:53] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:07:58] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:08:03] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:08] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:08:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:08:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:09:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:09:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:09:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:06] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:10:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:41] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:10:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:10:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:11] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:11:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:41] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:11:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:11:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:10] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:16] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:12:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:12:51] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:12:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:10] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:26] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:13:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:13:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:14:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:10] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:21] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:26] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:31] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:14:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:14:56] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:01] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:15:06] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:11] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:16] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:21] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:26] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:15:31] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:15:56] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:16:01] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:06] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:11] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:16] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:21] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:26] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:30] System: Bildschirm aus
+[5:16:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:16:31] App: jetzt im Hintergrund
+[5:16:31] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:16:56] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:01] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:06] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:17:06] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:11] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:16] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:36] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:17:37] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:42] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:47] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:52] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:17:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:06] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:18:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:37] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:41] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:18:42] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:47] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:52] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:18:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:16] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:19:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:22] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:27] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:32] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:37] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:42] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:46] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:19:47] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:52] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:19:57] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:02] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:07] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:12] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:17] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:21] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:20:23] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:28] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:33] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:38] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:43] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:48] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:51] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:20:53] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:20:58] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:03] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:08] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:13] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:18] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:23] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:26] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:21:28] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:33] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:38] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:43] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:48] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:53] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:21:56] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:21:58] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:03] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:08] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:13] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:18] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:23] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:28] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:22:33] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:38] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:43] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:48] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:53] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:22:58] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:23:03] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:08] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:13] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:18] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:36] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:23:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:23:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:06] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:24:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:41] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:24:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:24:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:11] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:25:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:24] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:29] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:34] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:39] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:44] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:46] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:25:49] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:54] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:25:59] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:04] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:09] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:14] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:19] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:21] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:26:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:26:56] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:27:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:10] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:27:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:27:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:01] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:28:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:10] Spektrum: 110 Bilder in 5 s (330 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:15] Spektrum: 110 Bilder in 5 s (330 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:25] Spektrum: 110 Bilder in 5 s (330 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:31] Spektrum TX: Anzeige 20 m auf -142…-47 dBm (Radio bleibt -134…-40)
+[5:28:31] Spektrum TX: Anzeige gleitet zurück auf -134…-40 dBm
+[5:28:31] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:28:31] Spektrum TX: Anzeige 20 m auf -142…-47 dBm (Radio bleibt -134…-40)
+[5:28:31] Spektrum TX: Anzeige gleitet zurück auf -134…-40 dBm
+[5:28:35] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:40] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:45] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:50] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:28:55] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:00] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:05] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:06] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:29:10] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:15] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:20] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:25] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:30] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:36] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:36] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:29:41] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:46] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:51] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:29:56] Spektrum: 109 Bilder in 5 s (327 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:11] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:30:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:41] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:30:46] Spektrum: 110 Bilder in 5 s (330 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:51] Spektrum: 110 Bilder in 5 s (330 Pakete, 0 ungültig, 0 lückenhaft)
+[5:30:56] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:16] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:31:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:46] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:31:46] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:51] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:31:56] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:16] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:32:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:46] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:51] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:32:51] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:32:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:02] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:07] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:12] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:17] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:21] Ton: 20 m 14.235 MHz USB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:33:22] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:27] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:30] AGC-T Auto: Rauschpegel -90.5 dBm (180 Werte) → AGC-T 26
+[5:33:31] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:33:32] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:37] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:42] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:47] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:52] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:33:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:02] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:06] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:34:07] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:12] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:17] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:22] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:27] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:32] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:36] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:34:37] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:42] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:47] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:52] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:34:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:02] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:07] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:11] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:35:12] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:17] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:22] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:27] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:32] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:37] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:42] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:46] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:35:47] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:52] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:35:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:02] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:07] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:12] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:18] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:21] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:36:23] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:28] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:33] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:38] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:43] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:48] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:51] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:36:53] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:36:58] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:03] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:08] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:13] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:18] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:23] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:26] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:37:28] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:33] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:38] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:43] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:48] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:53] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:37:58] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:01] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:38:03] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:08] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:13] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:18] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:23] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:28] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:31] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:38:33] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:38] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:43] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:48] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:53] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:38:58] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:03] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:06] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:39:08] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:13] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:18] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:23] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:28] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:33] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:39] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:41] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:39:44] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:49] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:54] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:39:59] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:04] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:09] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:11] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:40:14] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:19] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:24] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:29] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:34] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:39] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:41] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:40:44] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:49] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:54] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:40:59] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:04] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:09] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:14] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:16] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:41:19] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:24] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:29] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:34] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:39] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:44] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:49] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:51] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:41:54] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:41:59] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:04] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:09] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:14] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:19] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:21] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:42:24] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:29] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:34] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:39] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:44] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:49] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:54] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:42:56] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:43:00] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:05] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:10] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:15] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:20] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:25] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:30] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:31] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:43:35] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:40] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:45] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:50] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:43:55] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:00] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:05] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:06] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:44:10] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:15] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:20] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:25] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:30] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:35] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:36] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:44:40] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:45] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:50] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:44:55] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:00] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:05] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:10] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:11] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:45:15] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:20] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:25] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:25] System: Bildschirm an
+[5:45:28] App: jetzt im Vordergrund
+[5:45:30] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:34] App: jetzt im Hintergrund
+[5:45:35] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:40] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:45] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:46] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:45:50] HÄNGER: 1 s kein Audio-Takt (Eingang 1010169, Ausgang 1010169, Engine läuft: false) → automatischer Neustart
+[5:45:50] ——— Engine-Start (Versuch 1), Kette: DD5MD ———
+[5:45:50] Ausgabegerät: Fireface UCX II (24259086) id=138 uid=RMEUSBDevice-130-24259086 ein=8 aus=8
+[5:45:50] Einstellung: 48000.0 Hz, Puffer 128, Eingänge [4], Ausgänge [2], eingerichtet=true, stumm=false
+[5:45:50] Mikrofon-Erlaubnis: 3 (3 = erlaubt)
+[5:45:50] Vorher: Eingang-Gerät 185, Ausgang-Gerät 185
+[5:45:50] Nachher: Eingang-Gerät 138, Ausgang-Gerät 138
+[5:45:50] Eingang laut Engine: <AVAudioFormat 0x79a60d99f0:  1 ch,  48000 Hz, Float32>, Hardware: <AVAudioFormat 0x79a60d8230:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:45:50] Ausgang Hardware-Format: <AVAudioFormat 0x79a60d9a40:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:45:50] Eingangsformat (vorgegeben): <AVAudioFormat 0x79a60d85a0:  8 ch,  48000 Hz, Float32, deinterleaved>
+[5:45:50] Kette: TB Equalizer Pro an
+[5:45:50] Kette: MJUC an
+[5:45:50] Kette: TB Equalizer Pro an
+[5:45:50] Kette: xGain64 an
+[5:45:50] Kette: TB_Barricade_v4 an
+[5:45:50] Mixer→Ausgang Format: <AVAudioFormat 0x79a60d9590:  2 ch,  48000 Hz, Float32, deinterleaved>
+[5:45:50] Kanal-Zuordnung Ausgang [-1, -1, 0, -1, -1, -1, -1, -1] → Status 0
+[5:45:50] Engine läuft: true
+[5:45:50] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:45:52] Nach 2.0 s: Eingang-Aufrufe 755 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 755 (je 128 Samples), erfolgreich 754, Aussetzer 1, Mix-Spitze 0.0, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[5:45:55] Nach 5.0 s: Eingang-Aufrufe 1883 (je 128 Samples, 8 Puffer), Ausgang-Aufrufe 1883 (je 128 Samples), erfolgreich 1882, Aussetzer 1, Mix-Spitze 4.6133995e-05, Ausgang-Spitze 0.0, Engine läuft: true, Mixer-Lautstärke 1.0
+[5:45:55] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:00] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:05] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:10] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:15] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:16] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:46:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:46] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:51] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:46:51] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:46:56] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:26] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:47:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:46] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:51] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:47:56] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:47:56] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:26] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:31] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:48:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:41] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:46] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:51] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:48:56] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:01] Ton: 20 m 14.235 MHz USB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 30 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:49:01] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:06] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:11] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:16] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:18] App: jetzt im Vordergrund
+[5:49:18] App: jetzt im Vordergrund
+[5:49:21] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:26] Ton: 20 m 14.235 MHz USB | AGC med T=20, AUTO unsere AN, Radio-AUTO aus | AF 30 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:49:26] Spektrum: 88 Bilder in 5 s (264 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:31] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:36] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:42] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:47] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:52] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:49:56] Ton: 20 m 14.235 MHz USB | AGC med T=20, AUTO unsere AN, Radio-AUTO aus | AF 30 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:49:57] Spektrum: 111 Bilder in 5 s (333 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:01] Profil global: Radio meldet current="40M_DD5MD"
+[5:50:01] Ton: 40 m 7.150 MHz LSB | AGC med T=11, AUTO unsere AN, Radio-AUTO aus | AF 25 (mute) | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:50:02] Spektrum: 87 Bilder in 5 s (261 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:07] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:11] AGC-T Auto: Rauschpegel -100.0 dBm (21 Werte) → AGC-T 29
+[5:50:12] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:16] Ton: 40 m 7.165 MHz LSB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:50:17] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:22] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:25] Mac-Audio: MNR jetzt an, Audio Radio, Stärke 5 %
+[5:50:25] Mac-Audio: Audio jetzt Mac, MNR an
+[5:50:26] Ton: 40 m 7.165 MHz LSB | AGC med T=29, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:50:27] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:28] AGC-T Auto: Rauschpegel -87.0 dBm (54 Werte) → AGC-T 26
+[5:50:30] MNR-Kontrolle: Eingang -74.7 dBFS, nach dem Filter -89.7 dBFS, Absenkung 15.0 dB (Stärke 20 %, Mac-Verstärkung 36 dB)
+[5:50:32] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:35] MNR-Kontrolle: Eingang -72.5 dBFS, nach dem Filter -85.7 dBFS, Absenkung 13.2 dB (Stärke 4 %, Mac-Verstärkung 36 dB)
+[5:50:36] Ton: 40 m 7.165 MHz LSB | AGC med T=26, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:50:36] AGC-T Auto: Rauschpegel -87.0 dBm (58 Werte) → AGC-T 23
+[5:50:37] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:40] MNR-Kontrolle: Eingang -71.7 dBFS, nach dem Filter -91.6 dBFS, Absenkung 19.8 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:50:41] Ton: 40 m 7.165 MHz LSB | AGC med T=23, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:50:42] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:44] AGC-T Auto: Rauschpegel -86.3 dBm (75 Werte) → AGC-T 20
+[5:50:45] MNR-Kontrolle: Eingang -82.7 dBFS, nach dem Filter -92.2 dBFS, Absenkung 9.6 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:50:46] Ton: 40 m 7.165 MHz LSB | AGC med T=20, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:50:47] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:50] MNR-Kontrolle: Eingang -79.9 dBFS, nach dem Filter -93.0 dBFS, Absenkung 13.1 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:50:52] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:50:53] AGC-T Auto: Rauschpegel -86.3 dBm (92 Werte) → AGC-T 17
+[5:50:55] MNR-Kontrolle: Eingang -83.8 dBFS, nach dem Filter -98.1 dBFS, Absenkung 14.2 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:50:56] Ton: 40 m 7.165 MHz LSB | AGC med T=17, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Mac, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR an 5 %, NR aus
+[5:50:57] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:00] MNR-Kontrolle: Eingang -83.2 dBFS, nach dem Filter -98.1 dBFS, Absenkung 15.0 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:51:02] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:05] MNR-Kontrolle: Eingang -82.8 dBFS, nach dem Filter -95.2 dBFS, Absenkung 12.5 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:51:06] Mac-Audio: MNR jetzt aus, Audio Mac, Stärke 5 %
+[5:51:06] Mac-Audio: Audio jetzt Radio, MNR aus
+[5:51:06] Ton: 40 m 7.165 MHz LSB | AGC med T=17, AUTO unsere AN, Radio-AUTO aus | AF 25 | Audio Radio, Mac-Gain 36 dB, Mac-Regler 100 %, Gerät Audioengine 2+ | MNR aus 5 %, NR aus
+[5:51:07] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:12] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:15] App: jetzt im Hintergrund
+[5:51:17] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:19] App: jetzt im Vordergrund
+[5:51:22] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:23] Mac-Audio: MNR jetzt an, Audio Radio, Stärke 5 %
+[5:51:23] Mac-Audio: Audio jetzt Mac, MNR an
+[5:51:25] MNR-Kontrolle: Eingang -66.7 dBFS, nach dem Filter -68.0 dBFS, Absenkung 1.3 dB (Stärke 5 %, Mac-Verstärkung 36 dB)
+[5:51:25] Mac-Audio: MNR jetzt aus, Audio Mac, Stärke 5 %
+[5:51:25] Mac-Audio: Audio jetzt Radio, MNR aus
+[5:51:27] Spektrum: 100 Bilder in 5 s (300 Pakete, 0 ungültig, 0 lückenhaft)
+[5:51:30] Profil global: Radio meldet current=""
+[5:51:31] Programm beendet (sauber, ohne Plugin-Abräumen) – Auslöser: Tastatur (⌘q)

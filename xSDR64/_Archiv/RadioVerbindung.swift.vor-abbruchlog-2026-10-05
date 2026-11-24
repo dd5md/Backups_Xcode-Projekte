@@ -1,0 +1,261 @@
+import ApiPackage
+import Foundation
+import Observation
+
+/// Verbindung zum FlexRadio über K3TZRs ApiPackage (eigene Kopie in Pakete/).
+/// Eine gemeinsame Instanz für die ganze App: sucht Radios im lokalen Netz,
+/// verbindet als Gui-Client und stellt die Werte für die Oberfläche bereit.
+@MainActor
+@Observable
+final class RadioVerbindung {
+  static let shared = RadioVerbindung()
+
+  /// Das Datenmodell aus dem ApiPackage (Radio, Slices, Meter …)
+  let api = ApiModel()
+
+  enum Zustand: Equatable {
+    case getrennt
+    case verbinde
+    case verbunden
+    case fehler(String)
+  }
+
+  private(set) var zustand: Zustand = .getrennt
+  private var gestartet = false
+
+  // Wachhund: merkt, wenn das Radio keine Daten mehr schickt (z. B. Verbindung vom Radio getrennt),
+  // obwohl xSDR64 noch „verbunden“ anzeigt – und verbindet dann selbst neu
+  private var wachhund: Timer?
+  private var verbundenSeit = Date.distantPast
+  private var neuVerbindenLaeuft = false
+  /// seit wann das verbundene Radio nicht mehr in der Liste steht (Oberfläche zeigt dann „nicht verbunden“)
+  private var ohneRadioSeit: Date?
+  /// seit wann ein Verbindungsaufbau läuft (Wachhund bricht ab, wenn er hängt)
+  private var verbindeSeit: Date?
+
+  // Einstellungen, die über Neustarts erhalten bleiben
+  private let speicher = UserDefaults.standard
+  private let kennungKey = "radioClientKennung"
+  private let letztesRadioKey = "radioLetztesRadio"
+  private let leiseGesetztKey = "radioErsteVerbindungLeise"
+  private static let autoKey = "radioAutomatischVerbinden"
+
+  /// Beim Start das zuletzt benutzte Radio automatisch verbinden (Häkchen im Radio-Popup)
+  var automatischVerbinden: Bool = UserDefaults.standard.object(forKey: RadioVerbindung.autoKey) as? Bool ?? true {
+    didSet { speicher.set(automatischVerbinden, forKey: Self.autoKey) }
+  }
+
+  /// Feste Kennung von xSDR64 beim Radio. Bleibt immer gleich, damit das Radio
+  /// beim Verbinden die letzten Einstellungen (auch die Lautstärke) wieder einsetzt.
+  private var clientKennung: UUID {
+    if let text = speicher.string(forKey: kennungKey), let id = UUID(uuidString: text) { return id }
+    let neu = UUID()
+    speicher.set(neu.uuidString, forKey: kennungKey)
+    return neu
+  }
+
+  static let stationName = "xSDR64"
+  private let discoveryPort = 4992
+  private let mtu = 1250
+
+  private init() {}
+
+  // MARK: - Abfragen für die Oberfläche
+
+  /// Alle im Netz gefundenen Radios
+  var gefundeneRadios: [Radio] { api.radios }
+
+  /// Das verbundene Radio (nur wenn verbunden)
+  var radio: Radio? {
+    guard zustand == .verbunden, let id = api.activeSelection?.radioId else { return nil }
+    return api.radios.first { $0.id == id }
+  }
+
+  var istVerbunden: Bool { zustand == .verbunden }
+
+  /// Das zuletzt benutzte Radio, falls es gerade im Netz gefunden wird
+  var letztesGefundenesRadio: Radio? {
+    guard let serial = speicher.string(forKey: letztesRadioKey) else { return nil }
+    return api.radios.first { $0.packet.serial == serial }
+  }
+
+  /// Anzeigename eines Radios: Spitzname, sonst Modell
+  static func name(_ radio: Radio) -> String {
+    radio.packet.nickname.isEmpty ? radio.packet.model : radio.packet.nickname
+  }
+
+  // MARK: - Ablauf
+
+  /// Beim App-Start einmal aufrufen: Suche im lokalen Netz starten
+  /// und – falls bekannt – das zuletzt benutzte Radio verbinden.
+  func starten() {
+    guard !gestartet else { return }
+    gestartet = true
+    api.listenerLocal = ListenerLocal(api, port: discoveryPort)
+    // Spektrum-Daten vom Radio direkt in den Sammler (UDP-Queue)
+    api.streamModel?.onPanadapterPayload = SpektrumEmpfang.shared.panadapterRueckruf
+    api.streamModel?.onWaterfallPayload = WasserfallEmpfang.shared.rueckruf
+    api.streamModel?.onMeterPayload = MessEmpfang.shared.rueckruf
+    api.streamModel?.onDaxRxAudioPayload = MicNetzEmpfang.verteiler   // Mac-Audio + Netz-Mikrofon
+    wachhundStarten()
+    Task {
+      do {
+        try await api.listenerLocal?.start(port: discoveryPort)
+      } catch {
+        zustand = .fehler("Suche im Netz nicht möglich")
+        return
+      }
+      if automatischVerbinden { await letztesRadioVerbinden() }
+    }
+  }
+
+  /// Wartet bis zu 10 s, ob das zuletzt benutzte Radio auftaucht, und verbindet dann.
+  private func letztesRadioVerbinden() async {
+    guard let letztes = speicher.string(forKey: letztesRadioKey) else { return }
+    for _ in 0..<20 {
+      if let radio = api.radios.first(where: { $0.packet.serial == letztes }) {
+        await verbinden(radio)
+        return
+      }
+      try? await Task.sleep(for: .milliseconds(500))
+    }
+  }
+
+  func verbinden(_ radio: Radio) async {
+    if zustand == .verbunden || zustand == .verbinde { await trennen() }
+    zustand = .verbinde
+    verbindeSeit = Date()
+    let auswahl = PickerSelection(radio.id, Self.stationName)
+    api.activeSelection = auswahl
+    do {
+      try await api.connect(
+        selection: auswahl,
+        isGui: true,
+        programName: "xSDR64",
+        mtuValue: mtu,
+        guiClientId: clientKennung)
+      zustand = .verbunden
+      neuVerbindenLaeuft = false   // auch wenn von Hand verbunden wurde, während der Wachhund wartete
+      verbundenSeit = Date()
+      MessEmpfang.shared.zeitZuruecksetzen()
+      speicher.set(radio.packet.serial, forKey: letztesRadioKey)
+      await ersteVerbindungLeise()
+      MacAudio.shared.anwenden()   // war „Audio: Mac“ gewählt, Ton gleich wieder holen
+      Task { try? await Task.sleep(for: .seconds(3)); MessModell.shared.micMesswerteProtokollieren() }
+      Loopback.shared.anwenden()   // Loopback für Aufnahmen wieder einschalten, falls aktiv
+      // Sicherheit: falls xSDR64 zuletzt mit Sendeweg „Audiokette übers Netz“ beendet wurde,
+      // stünde das Radio noch auf DAX – dann käme beim Senden kein Mikrofon-Ton
+      sende("transmit set dax=0")
+    } catch {
+      await api.disconnect()
+      zustand = .fehler("Verbindung fehlgeschlagen")
+    }
+  }
+
+  /// Für den Wachhund: Fehlertext in der Statusleiste
+  fileprivate func setzeFehler(_ text: String) { zustand = .fehler(text) }
+
+  func trennen() async {
+    neuVerbindenLaeuft = false   // von Hand getrennt: nicht wieder selbst verbinden
+    await api.disconnect()
+    zustand = .getrennt
+    MacAudio.shared.anwenden()   // stoppt die Wiedergabe am Mac
+    MicNetz.shared.stoppen()
+    TxNetz.shared.stoppen()
+    Loopback.shared.anwenden()
+  }
+
+  /// Nur beim allerersten Verbinden: eigene Slices leise stellen,
+  /// damit nichts aus dem Lautsprecher brüllt (Radio legt neue Slices mit Standard-Lautstärke an).
+  private func ersteVerbindungLeise() async {
+    guard !speicher.bool(forKey: leiseGesetztKey) else { return }
+    // kurz warten, bis das Radio die Slices gemeldet hat
+    for _ in 0..<10 where api.slices.isEmpty {
+      try? await Task.sleep(for: .milliseconds(300))
+    }
+    let eigene = api.slices.filter { $0.clientHandle == api.connectionHandle }
+    for slice in eigene {
+      api.sendTcp("slice set \(slice.id) audio_level=10")
+    }
+    speicher.set(true, forKey: leiseGesetztKey)
+  }
+}
+
+// MARK: - Wachhund (Verbindung verloren → neu verbinden)
+
+extension RadioVerbindung {
+  /// Prüft alle 2 s. Läuft in allen Run-Loop-Modi (auch während Menüs oder Dialoge offen sind).
+  fileprivate func wachhundStarten() {
+    let t = Timer(timeInterval: 2, repeats: true) { _ in
+      MainActor.assumeIsolated { RadioVerbindung.shared.wachhundPruefen() }
+    }
+    RunLoop.main.add(t, forMode: .common)
+  }
+
+  fileprivate func wachhundPruefen() {
+    // Verbindungsaufbau hängt (Radio antwortet nicht)? Abbrechen – der Neuverbinden-Durchlauf versucht es dann erneut
+    if zustand == .verbinde, let seit = verbindeSeit, Date().timeIntervalSince(seit) > 20 {
+      verbindeSeit = nil
+      Diagnose.log("Wachhund: Verbindungsaufbau hängt seit 20 s – breche ab")
+      Task { await api.disconnect() }
+      return
+    }
+    guard zustand == .verbunden, !neuVerbindenLaeuft else { return }
+    guard Date().timeIntervalSince(verbundenSeit) > 10 else { return }   // Anlaufzeit nach dem Verbinden
+    // Fall 1: Radio aus der Liste verschwunden (meldet sich nicht mehr im Netz oder hat uns abgemeldet) –
+    // die Oberfläche zeigt dann „nicht verbunden“, auch wenn noch Daten kommen → neu verbinden
+    if radio == nil {
+      if ohneRadioSeit == nil {
+        ohneRadioSeit = Date()
+        Diagnose.log("Wachhund: Radio nicht mehr in der Liste (gefunden: \(api.radios.count), Auswahl: \(api.activeSelection == nil ? "weg" : "da"))")
+      } else if Date().timeIntervalSince(ohneRadioSeit!) > 5 {
+        ohneRadioSeit = nil
+        Diagnose.log("Wachhund: Radio seit 5 s weg – verbinde neu")
+        Task { await neuVerbinden() }
+      }
+      return
+    }
+    ohneRadioSeit = nil
+    // Fall 2: keine Messwerte mehr vom Radio
+    let alter = MessEmpfang.shared.sekundenSeitLetztemPaket
+    guard alter > 6 else { return }
+    Diagnose.log("Wachhund: seit \(Int(alter)) s keine Daten vom Radio – verbinde neu")
+    Task { await neuVerbinden() }
+  }
+
+  /// Getrennt aufräumen und das letzte Radio erneut verbinden – alle 3 s, bis es klappt
+  /// oder jemand von Hand trennt/verbindet
+  private func neuVerbinden() async {
+    // merken, was vor dem Abbruch lief – nach dem Neuverbinden wieder einschalten
+    let micWar = MicNetz.shared.aktiv
+    let txWar = TxNetz.shared.aktiv
+    let ketteLief = AudioWelt.shared.host.isRunning
+    await trennen()
+    neuVerbindenLaeuft = true
+    let serial = UserDefaults.standard.string(forKey: "radioLetztesRadio")
+    for versuch in 1...200 {
+      guard neuVerbindenLaeuft else { return }
+      setzeFehler("Verbindung verloren – verbinde neu (\(versuch)) …")
+      if let radio = api.radios.first(where: { $0.packet.serial == serial }) {
+        await verbinden(radio)
+        if zustand == .verbunden {
+          Diagnose.log("Wachhund: wieder verbunden nach \(versuch) Versuch(en)")
+          // Sendeweg Flex-Mikrofon → Audiokette → DAX TX wiederherstellen
+          if micWar { MicNetz.shared.starten() }
+          if txWar { TxNetz.shared.starten() }
+          if ketteLief && !AudioWelt.shared.host.isRunning { AudioWelt.shared.host.start() }
+          if micWar || txWar {
+            Diagnose.log("Wachhund: Audiokette übers Netz wieder eingeschaltet (Mic: \(micWar), DAX TX: \(txWar))")
+          }
+          return
+        }
+      }
+      if versuch % 10 == 1 {
+        Diagnose.log("Wachhund: Versuch \(versuch) – Radio im Netz sichtbar: \(api.radios.contains { $0.packet.serial == serial } ? "ja" : "nein"), Zustand: \(zustand)")
+      }
+      try? await Task.sleep(for: .seconds(3))
+    }
+    neuVerbindenLaeuft = false
+    setzeFehler("Verbindung verloren – bitte neu verbinden")
+  }
+}

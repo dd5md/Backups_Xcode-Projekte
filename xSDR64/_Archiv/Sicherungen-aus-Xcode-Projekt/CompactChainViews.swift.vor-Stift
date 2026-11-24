@@ -1,0 +1,379 @@
+import SwiftUI
+
+// Schmale Ansichten der Audiokette für das linke Panel von xSDR64.
+// Die Technik (AudioHost, Ketten, Plugins) kommt unverändert aus dem Ordner
+// „Audiokette“ (Kopie von xHost64) – hier ist NUR die Optik neu: kleinere Schrift,
+// flachere Zeilen, alles passt in rund 300 Punkte Breite.
+// So bleibt der Ordner „Audiokette“ eine reine Kopie und lässt sich später
+// einfach wieder aus xHost64 erneuern.
+
+// MARK: - Alle Ketten untereinander
+struct CompactChainsList: View {
+    let host: AudioHost
+    let catalog: PluginCatalog
+    @Binding var pluginsOpen: Bool
+
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack(spacing: Abstand.s) {
+                ForEach(host.chains) { chain in
+                    CompactChainBox(chain: chain, host: host, catalog: catalog, pluginsOpen: $pluginsOpen)
+                }
+                if host.chains.isEmpty {
+                    Text("Keine Audiokette – oben „+ Kette“")
+                        .foregroundStyle(Theme.textDim)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                }
+                if let error = host.errorText {
+                    Text(error)
+                        .foregroundStyle(Theme.meterRed)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(Abstand.s)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .font(Schrift.normal)
+    }
+}
+
+// MARK: - Eine Kette als Kasten
+struct CompactChainBox: View {
+    let chain: AudioChain
+    let host: AudioHost
+    let catalog: PluginCatalog
+    @Binding var pluginsOpen: Bool
+    @Environment(\.openWindow) private var openWindow
+
+    private var isActive: Bool { chain.id == host.activeChainID }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            if isActive {
+                CompactActiveRows(host: host)
+                    .padding(Abstand.s)
+            } else {
+                Text(summary)
+                    .font(Schrift.klein)
+                    .foregroundStyle(Theme.textDim)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(Abstand.s)
+            }
+        }
+        // wie ein Block der Seitenleiste: dunkle Kopfzeile, Fläche #3A3A3A
+        .background(Theme.rimuBlock)
+        .overlay(
+            Rectangle()
+                .stroke(isActive ? Theme.knopfAnRand : Theme.rimuSpaltKante, lineWidth: 1))
+        .opacity(isActive ? 1 : 0.75)
+    }
+
+    /// Kopfzeile: Name (anklicken zum Ändern) – „+“ – EIN/AUS – Papierkorb
+    private var header: some View {
+        HStack(spacing: 6) {
+            TextField("Name der Audiokette",
+                      text: Binding(get: { chain.name }, set: { chain.name = $0 }))
+                .textFieldStyle(.plain)
+                .font(Schrift.normalFett)
+                .lineLimit(1)
+            // Plugin hinzufügen: schaltet die Kette ein und fährt die Liste aus
+            Button {
+                if !isActive { host.setChain(chain, on: true) }
+                openWindow(id: "plugins")   // Plugin-Liste im eigenen Fenster
+            } label: {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(KnopfStil(art: .an, breite: 30))
+            .focusEffectDisabled()
+            .help("Plugin hinzufügen – öffnet die Plugin-Liste im eigenen Fenster")
+
+            // EIN/AUS – Einschalten schaltet die andere Kette aus
+            RimuSchalter(isOn: Binding(get: { isActive }, set: { host.setChain(chain, on: $0) }),
+                         farbe: Theme.meterValue)
+                .help(isActive ? "Kette ausschalten" : "Diese Kette einschalten – die andere geht aus")
+            // Papierkorb (⌘Z holt die Kette zurück)
+            Button { host.removeChain(chain) } label: {
+                Image(systemName: "trash")
+                    .font(Schrift.normal)
+                    .foregroundStyle(Theme.textDim)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .help("Audiokette löschen – ⌘Z holt sie zurück")
+        }
+        .padding(.horizontal, Abstand.s)
+        .frame(height: Mass.zeilenHoehe + Abstand.xs)
+        .background(Theme.rimuKopf)
+    }
+
+    /// „IN 5 · OUT 3+4 | EQ → MJUC → …“
+    private var summary: String {
+        let io = "IN \(channels(chain.inputs)) · OUT \(channels(chain.outputs))"
+        let plugins = chain.slots.isEmpty
+            ? "keine Plugins"
+            : chain.slots.map(\.displayName).joined(separator: " → ")
+        return io + "  |  " + plugins
+    }
+
+    private func channels(_ set: Set<Int>) -> String {
+        set.isEmpty ? "–" : set.sorted().map { String($0 + 1) }.joined(separator: "+")
+    }
+}
+
+// MARK: - IN → Plugins → OUT der eingeschalteten Kette
+struct CompactActiveRows: View {
+    let host: AudioHost
+
+    private var inputArrow: ArrowState {
+        guard host.isRunning else { return .idle }
+        return max(host.levelDB, host.levelHold) > -60 ? .flowing : .idle
+    }
+
+    private func arrow(after slot: ChainSlot) -> ArrowState {
+        if slot.error != nil || (host.isRunning && slot.unit == nil) { return .error }
+        guard host.isRunning, max(slot.levelDB, slot.holdDB) > -60 else { return .idle }
+        return slot.isOn ? .flowing : .bypassed
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            CompactEndpointRow(host: host, isInput: true)
+            SmallArrow(state: inputArrow)
+
+            ForEach(Array(host.chain.enumerated()), id: \.element.id) { index, slot in
+                CompactPluginRow(number: index + 1, slot: slot, host: host)
+                    .chainDropTarget(slot, host: host)
+                SmallArrow(state: arrow(after: slot))
+            }
+
+            if host.chain.isEmpty {
+                Text("Noch keine Plugins – „+“ oben")
+                    .font(Schrift.klein)
+                    .foregroundStyle(Theme.textDim)
+                    .frame(maxWidth: .infinity, minHeight: 28)
+                    .overlay(RoundedRectangle(cornerRadius: 5)
+                        .stroke(Theme.border, style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
+                SmallArrow(state: inputArrow)
+            }
+
+            CompactEndpointRow(host: host, isInput: false)
+        }
+    }
+}
+
+// MARK: - Kleiner Pfeil zwischen den Zeilen
+struct SmallArrow: View {
+    let state: ArrowState
+    var body: some View {
+        Image(systemName: "arrow.down")
+            .font(Schrift.klein)
+            .foregroundStyle(state.color)
+            .frame(height: 14)
+    }
+}
+
+// MARK: - IN- bzw. OUT-Zeile
+struct CompactEndpointRow: View {
+    let host: AudioHost
+    let isInput: Bool
+    @State private var zeigeGeraete = false   // Gerätewahl dieser Kette (Zahnrad / Doppelklick)
+
+    private var color: Color { isInput ? Theme.inColor : Theme.outColor }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(isInput ? "IN" : "OUT")
+                .font(Schrift.kleinFett)
+                .foregroundStyle(color)
+                .frame(width: 34, height: Mass.knopfHoehe - 2)
+                .background(RoundedRectangle(cornerRadius: 4).fill(color.opacity(0.18)))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(color.opacity(0.6)))
+            Text(isInput ? host.inputSourceText : host.outputSourceText)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help(isInput ? host.inputSourceText : host.outputSourceText)
+            Spacer(minLength: 2)
+            // Gerät und Kanäle dieser Kette wählen – alle Mac-Geräte, auch nur Eingang (MacBook-/USB-Mikrofon)
+            Button { zeigeGeraete.toggle() } label: {
+                Image(systemName: "gearshape")
+                    .font(Schrift.normal)
+                    .foregroundStyle(Theme.textDim)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .help(isInput ? "Eingabegerät und Eingänge dieser Kette" : "Ausgabegerät und Ausgänge dieser Kette")
+            .popover(isPresented: $zeigeGeraete, arrowEdge: .trailing) {
+                if let chain = host.activeChain {
+                    ChainDeviceMenu(host: host, chain: chain, isInput: isInput)
+                        .padding(Abstand.m)
+                        .frame(width: 340)
+                        .onAppear { host.refreshDevices() }   // neu angesteckte Geräte gleich zeigen
+                }
+            }
+            if !isInput {
+                // Stumm
+                Button { host.toggleMute() } label: {
+                    Image(systemName: host.outputMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .font(Schrift.normal)
+                        .foregroundStyle(host.outputMuted ? Theme.meterRed : color)
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .help(host.outputMuted ? "Ausgang stumm – klicken zum Einschalten" : "Ausgang stummschalten")
+                // Mono / Stereo
+                if let chain = host.activeChain {
+                    Button("M") { host.setStereoOut(chain, false) }
+                        .buttonStyle(KnopfStil(art: chain.stereoOut ? .aus : .rot, breite: 26))
+                    .help("Mono: auf alle angehakten Ausgänge")
+                    Button("S") { host.setStereoOut(chain, true) }
+                        .buttonStyle(KnopfStil(art: chain.stereoOut ? .gruen : .aus, breite: 26))
+                    .help("Stereo: 1. Ausgang links, 2. rechts")
+                }
+            }
+            LevelLED(
+                db: isInput ? host.levelDB : host.outputLevelDB,
+                hold: isInput ? host.levelHold : host.outputHold,
+                clipping: isInput ? host.inClipUntil > .now : host.outClipUntil > .now,
+                blinkOn: host.blinkOn,
+                active: host.isRunning && (isInput || !host.outputMuted),
+                isLast: true)
+        }
+        .padding(.horizontal, Abstand.s)
+        .frame(height: Mass.zeilenHoehe + Abstand.s)
+        .background(RoundedRectangle(cornerRadius: Radius.klein).fill(Theme.rimuLeiste))
+        .overlay(RoundedRectangle(cornerRadius: Radius.klein).stroke(Theme.knopfRand))
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { zeigeGeraete = true }   // Doppelklick wie in xHost64
+    }
+}
+
+// MARK: - Plugin-Zeile
+struct CompactPluginRow: View {
+    let number: Int
+    let slot: ChainSlot
+    let host: AudioHost
+
+    var body: some View {
+        HStack(spacing: 6) {
+            // Nummer/Griff aus xHost64 (zum Umsortieren ziehen) – verkleinert
+            NumberGrip(number: number, slot: slot)
+                .scaleEffect(0.7)
+                .frame(width: 35, height: 24)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(slot.displayName)
+                    .font(Schrift.normal)
+                    .lineLimit(1)
+                Text(status)
+                    .font(Schrift.klein)
+                    .foregroundStyle(slot.error == nil ? Theme.textDim : Theme.meterRed)
+                    .lineLimit(1)
+            }
+            .opacity(slot.isOn ? 1 : 0.5)
+            .help(slot.info.name + " · " + slot.info.manufacturer)
+            Spacer(minLength: 2)
+            LevelLED(
+                db: slot.levelDB,
+                hold: slot.holdDB,
+                clipping: slot.isClipping,
+                blinkOn: host.blinkOn,
+                active: host.isRunning && slot.unit != nil,
+                isLast: slot.id == host.chain.last?.id)
+            // Plugin-Fenster
+            Button { host.openEditor(slot) } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(Schrift.normal)
+                    .foregroundStyle(slot.unit == nil ? Theme.textDim : Theme.accent)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .disabled(slot.unit == nil)
+            .help("Plugin-Fenster öffnen")
+            // EIN/AUS
+            RimuSchalter(isOn: Binding(get: { slot.isOn }, set: { host.setPlugin(slot, on: $0) }))
+                .help(slot.isOn ? "Plugin ausschalten (überbrücken)" : "Plugin einschalten")
+            // Entfernen
+            Button { host.removePlugin(slot) } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(Schrift.normal)
+                    .foregroundStyle(Theme.textDim)
+                    .frame(width: 22, height: 24)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .help("Plugin aus der Kette entfernen (⌘Z holt es zurück)")
+        }
+        .padding(.horizontal, Abstand.s)
+        .frame(height: 42)
+        .background(RoundedRectangle(cornerRadius: Radius.klein).fill(Theme.knopfAusUnten))
+        .overlay(RoundedRectangle(cornerRadius: Radius.klein).stroke(Theme.knopfRand))
+    }
+
+    private var status: String {
+        if let error = slot.error { return error }
+        if slot.unit == nil { return "wird geladen …" }
+        return slot.info.manufacturer + (slot.isOn ? "" : " · AUS")
+    }
+}
+
+// MARK: - Pegel (3 s) – Inhalt des ⓘ-Popups oben im Panel (wie im Plugin xGain64)
+struct CompactStatsBox: View {
+    let host: AudioHost
+    private let stats = ChainStats.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("PEGEL (3 s)")
+                .font(Schrift.kleinFett)
+                .foregroundStyle(Theme.textDim)
+            Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 2) {
+                GridRow {
+                    Text("")
+                    head("PEAK"); head("RMS")
+                    head("GAIN"); value(stats.gain, signed: true)
+                }
+                GridRow {
+                    head("IN")
+                    value(stats.inPeak, signed: true, color: ChainStatsBar.peakColor(stats.inPeak, strict: false))
+                    value(stats.inRMS)
+                    head("CREST"); value(stats.crest, color: ChainStatsBar.crestColor(stats.crest))
+                }
+                GridRow {
+                    head("OUT")
+                    value(stats.outPeak, signed: true, color: ChainStatsBar.peakColor(stats.outPeak, strict: true))
+                    value(stats.outRMS)
+                    head("ZIEL"); value(stats.toTarget, signed: true, color: ChainStatsBar.targetColor(stats.toTarget))
+                }
+            }
+        }
+        .font(Schrift.zahl)
+        .padding(Abstand.s)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: Radius.klein).fill(Theme.rimuMeter))
+        .overlay(RoundedRectangle(cornerRadius: Radius.klein).stroke(Theme.knopfRand))
+        .onAppear { stats.attach(host) }
+        .help("Pegel über die letzten 3 Sekunden. GAIN = RMS OUT − RMS IN, CREST = PEAK OUT − RMS OUT, ZIEL = \(Int(stats.target)) dB − RMS OUT")
+    }
+
+    private func head(_ text: String) -> some View {
+        Text(text)
+            .font(Schrift.kleinFett)
+            .foregroundStyle(Theme.textDim)
+    }
+
+    private func value(_ db: Float?, signed: Bool = false, color: Color = Theme.text) -> some View {
+        Text(ChainStatsBar.format(db, signed: signed))
+            .foregroundStyle(db == nil ? Theme.textDim : color)
+            .frame(minWidth: 34, alignment: .trailing)
+    }
+}

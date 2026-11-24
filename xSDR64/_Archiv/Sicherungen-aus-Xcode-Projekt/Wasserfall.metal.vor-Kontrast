@@ -1,0 +1,75 @@
+// Wasserfall-Shader für xSDR64
+// Jede empfangene Zeile liegt als eine Reihe in einer Textur (Ringpuffer).
+// Der Fragment-Shader sucht für jeden Bildpunkt die passende Zeile und den passenden Wert –
+// über die Frequenz, damit der Wasserfall beim Drehen richtig mitwandert.
+
+#include <metal_stdlib>
+using namespace metal;
+
+struct WasserfallWerte {
+  float startHz;      // linker Rand der Anzeige (Hz)
+  float spanHz;       // Breite der Anzeige (Hz)
+  uint  oben;         // Reihe der neuesten Zeile im Ringpuffer
+  uint  reihen;       // Reihen im Ringpuffer
+  uint  breite;       // Werte je Reihe (Texturbreite)
+  uint  bildReihen;   // sichtbare Zeilen (Höhe der Anzeige in Punkten)
+  float schwarz;      // Schwarzwert (0…65535)
+  float verstaerkung; // Farbverstärkung (0…100)
+};
+
+struct Ausgabe {
+  float4 position [[position]];
+  float2 uv;
+};
+
+vertex Ausgabe wasserfall_vertex(uint id [[vertex_id]]) {
+  const float2 ecken[4] = { float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1) };
+  Ausgabe a;
+  a.position = float4(ecken[id], 0, 1);
+  a.uv = float2((ecken[id].x + 1) * 0.5, (1 - ecken[id].y) * 0.5);  // oben links = (0,0)
+  return a;
+}
+
+/// Farbverlauf nach SmartSDR (Screenshot des Nutzers): Rauschen kräftiges Königsblau,
+/// Signale je nach Stärke hellblau → türkis → hellgrün → gelbgrün, sehr starke orange/rot.
+static float3 farbe(float t) {
+  const float  stelle[7] = { 0.00, 0.12, 0.28, 0.45, 0.65, 0.82, 1.00 };
+  const float3 f[7] = {
+    float3(0.02, 0.04, 0.50),   // dunkles Blau
+    float3(0.06, 0.13, 0.86),   // Königsblau (Rauschen)
+    float3(0.12, 0.50, 0.95),   // hellblau
+    float3(0.40, 0.92, 0.45),   // hellgrün (typisches SSB-Signal)
+    float3(0.85, 1.00, 0.30),   // gelbgrün
+    float3(1.00, 0.60, 0.10),   // orange
+    float3(1.00, 0.15, 0.05)    // rot
+  };
+  float x = clamp(t, 0.0, 1.0);
+  for (int i = 0; i < 6; i++) {
+    if (x <= stelle[i + 1]) {
+      return mix(f[i], f[i + 1], (x - stelle[i]) / (stelle[i + 1] - stelle[i]));
+    }
+  }
+  return f[6];
+}
+
+fragment float4 wasserfall_fragment(Ausgabe in [[stage_in]],
+                                    texture2d<ushort, access::read> zeilen [[texture(0)]],
+                                    constant float2 *zeilenInfo [[buffer(0)]],
+                                    constant WasserfallWerte &w [[buffer(1)]]) {
+  const float4 leer = float4(0, 0, 0.05, 1);
+  uint y = uint(in.uv.y * float(w.bildReihen));
+  if (y >= w.reihen) return leer;
+  uint reihe = (w.oben + w.reihen - y) % w.reihen;
+
+  float2 info = zeilenInfo[reihe];  // x = Frequenz des ersten Werts, y = Hz je Wert
+  if (info.y <= 0) return leer;     // Reihe noch nicht gefüllt
+
+  float hz = w.startHz + in.uv.x * w.spanHz;
+  float bin = (hz - info.x) / info.y;
+  if (bin < 0 || bin >= float(w.breite)) return leer;
+
+  float wert = float(zeilen.read(uint2(uint(bin), reihe)).r);
+  float t = max(0.0, (wert - w.schwarz) / 65536.0) * pow(1.0 + w.verstaerkung / 100.0, 4.0);
+  // leicht anheben (Wurzel-ähnlich): schwache Signale werden sichtbarer, starke bleiben unterscheidbar
+  return float4(farbe(pow(t, 0.7)), 1);
+}

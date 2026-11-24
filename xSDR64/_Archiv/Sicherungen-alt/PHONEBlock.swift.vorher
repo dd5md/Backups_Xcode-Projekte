@@ -1,0 +1,45 @@
+import SwiftUI
+
+/// Inhalt des PHONE-Blocks: VOX + Pegel, Delay, TX-Filter Low/High Cut
+/// (bewusst ohne AM Carrier und DEXP – nur SSB-Sprechfunk)
+/// 01.10.2026: auf RimuSDR-Stil umgestellt (Design-Vorgabe)
+struct PHONEBlock: View {
+  // Vorerst nur in der Oberfläche – später kommen die Werte vom Radio
+  @State private var voxOn = false
+  @State private var voxLevel = 50.0
+  @State private var voxDelay = 25.0
+  @State private var lowCut = 100  // Hz
+  @State private var highCut = 2900  // Hz
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // VOX: Knopf + Pegel
+      ElementReglerZeile(value: $voxLevel) {
+        Button("VOX") { voxOn.toggle() }
+          .buttonStyle(KnopfStil(art: voxOn ? .an : .aus, breite: 78))
+      }
+      // Haltezeit der VOX
+      ReglerZeile(label: "Delay:", value: $voxDelay)
+
+      // TX-Filter: Überschriften über den Feldern, wie in RimuSDR
+      HStack(spacing: Abstand.s) {
+        Spacer().frame(width: 78)
+        Text("Low Cut").frame(maxWidth: .infinity)
+        Text("High Cut").frame(maxWidth: .infinity)
+      }
+      .font(Schrift.normal)
+      .padding(.top, Abstand.xs)
+      HStack(spacing: Abstand.s) {
+        Text("TX Filter:")
+          .frame(width: 78, alignment: .leading)
+        // untere Grenze darf die obere nicht überholen (mind. 100 Hz Abstand)
+        HzEingabe(value: $lowCut, range: 0...max(0, highCut - 100), breite: nil)
+        HzEingabe(value: $highCut, range: min(lowCut + 100, 10000)...10000, breite: nil)
+      }
+      .font(Schrift.normal)
+      .frame(height: Mass.zeilenHoehe)
+    }
+    .padding(Abstand.s)
+    .foregroundStyle(Theme.text)
+  }
+}

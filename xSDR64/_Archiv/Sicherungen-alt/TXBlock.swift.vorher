@@ -1,0 +1,68 @@
+//
+//  TXBlock.swift
+//  xSDR64
+//
+//  Created by Mathias Davidheimann on 24.09.26.
+//  01.10.2026: auf RimuSDR-Stil umgestellt (Design-Vorgabe)
+//
+
+import SwiftUI
+
+/// Inhalt des TX-Blocks: Leistungs- und SWR-Anzeige, Regler, TUNE / MOX / ATU
+struct TXBlock: View {
+  // Vorerst nur in der Oberfläche – später kommen die Werte vom Radio
+  @State private var rfPower = 100.0
+  @State private var tunePower = 25.0
+  @State private var tuneOn = false
+  @State private var moxOn = false
+  @State private var atuOn = false
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Messanzeigen auf dunklem Grund – über die ganze Blockbreite
+      VStack(spacing: Abstand.s) {
+        // Leistung 0…120 W, rot ab 100 W
+        RimuMeter(marks: [
+          .init(pos: 0, text: "0"),
+          .init(pos: 0.333, text: "40"),
+          .init(pos: 0.5, text: "RF Pwr"),
+          .init(pos: 0.667, text: "80"),
+          .init(pos: 0.833, text: "100", red: true),
+          .init(pos: 1, text: "120", red: true),
+        ], redFrom: 0.833, value: Double((MessModell.shared.leistungWatt ?? 0) / 120), ticks: 12)
+
+        // SWR 1…3, rot ab 2.5
+        RimuMeter(marks: [
+          .init(pos: 0, text: "1"),
+          .init(pos: 0.25, text: "1.5"),
+          .init(pos: 0.5, text: "SWR"),
+          .init(pos: 0.75, text: "2.5", red: true),
+          .init(pos: 1, text: "3", red: true),
+        ], redFrom: 0.75, value: Double(((MessModell.shared.swr ?? 1) - 1) / 2), ticks: 8)
+      }
+      .padding(Abstand.s)
+      .background(Theme.rimuMeter)
+
+      // Bedienteil auf der Blockfläche
+      VStack(spacing: 0) {
+        ReglerZeile(label: "RF Power:", value: $rfPower)
+        ReglerZeile(label: "Tune Pwr:", value: $tunePower)
+
+        HStack(spacing: Abstand.xs) {
+          Button("TUNE") { tuneOn.toggle() }
+            .buttonStyle(KnopfStil(art: tuneOn ? .an : .aus, breite: 60))
+          Button("MOX") { moxOn.toggle() }
+            .buttonStyle(KnopfStil(art: moxOn ? .an : .aus, breite: 60))
+          Spacer(minLength: 0)
+          Button("ATU") { atuOn.toggle() }
+            .buttonStyle(KnopfStil(art: atuOn ? .an : .aus, breite: 60))
+        }
+        .frame(height: Mass.zeilenHoehe)
+        .padding(.top, Abstand.xs)
+      }
+      .padding(.horizontal, Abstand.s)
+      .padding(.vertical, Abstand.s)
+    }
+    .foregroundStyle(Theme.text)
+  }
+}

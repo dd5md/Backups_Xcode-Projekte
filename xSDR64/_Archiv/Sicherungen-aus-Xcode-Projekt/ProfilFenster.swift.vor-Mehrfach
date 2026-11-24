@@ -1,0 +1,220 @@
+import ApiPackage
+import SwiftUI
+
+/// Die drei Profilarten des Radios – je ein eigenes Fenster (Menü Radio → Profile).
+enum ProfilArt: String, CaseIterable, Identifiable {
+  case global, tx, mic
+  var id: String { rawValue }
+  /// Fenster-ID für openWindow
+  var fensterId: String { "profile-\(rawValue)" }
+  var titel: String {
+    switch self {
+    case .global: "Global Profiles"
+    case .tx: "Transmit Profiles"
+    case .mic: "Microphone Profiles"
+    }
+  }
+  var menueName: String {
+    switch self {
+    case .global: "Global …"
+    case .tx: "Transmit …"
+    case .mic: "Microphone …"
+    }
+  }
+  /// Wort im Befehl für save/create/reset/delete (laden geht bei TX mit „tx“)
+  var befehlsWort: String {
+    switch self {
+    case .global: "global"
+    case .tx: "transmit"
+    case .mic: "mic"
+    }
+  }
+  /// Global: „Copy…“ (speichert die aktuellen Einstellungen unter neuem Namen); TX/Mic: „New…“
+  var neuTitel: String { self == .global ? "Copy…" : "New…" }
+}
+
+/// Fenster wie bei SmartSDR: Liste der Profile, das aktive mit „Current“,
+/// Knöpfe Use / Save / New (Copy) / Reset / Delete.
+struct ProfilFenster: View {
+  let art: ProfilArt
+  @State private var radio = RadioVerbindung.shared
+  @State private var ketten = KettenZuordnung.shared
+  @State private var auswahl: String?
+  @State private var neuerName = ""
+  @State private var zeigeNeu = false
+  @State private var frage: Frage?
+
+  private enum Frage: Identifiable {
+    case speichern(String), loeschen(String), zuruecksetzen(String)
+    var id: String {
+      switch self {
+      case .speichern(let n): "s" + n
+      case .loeschen(let n): "l" + n
+      case .zuruecksetzen(let n): "r" + n
+      }
+    }
+  }
+
+  private var profil: Profile? { radio.profil(art.rawValue) }
+  private var namen: [String] { (profil?.list ?? []).filter { !$0.isEmpty } }
+  private var aktuell: String { profil?.current ?? "" }
+  private var verbunden: Bool { radio.istVerbunden && profil != nil }
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Kopf: Knöpfe
+      HStack(spacing: Abstand.s) {
+        Spacer()
+        Button("Use") { auswahl.map(laden) }
+          .disabled(auswahl == nil || auswahl == aktuell)
+        Button("Save") { auswahl.map { frage = .speichern($0) } }
+          .disabled(auswahl == nil)
+        Button(art.neuTitel) { neuerName = ""; zeigeNeu = true }
+        Button("Reset") { auswahl.map { frage = .zuruecksetzen($0) } }
+          .disabled(auswahl == nil || art == .global)
+        Button {
+          auswahl.map { frage = .loeschen($0) }
+        } label: {
+          Image(systemName: "trash")
+        }
+        .help("Profil löschen")
+        .disabled(auswahl == nil || auswahl == aktuell)
+      }
+      .buttonStyle(KnopfStil())
+      .disabled(!verbunden)
+      .padding(Abstand.m)
+      .background(Theme.bar)
+
+      Divider()
+
+      // Liste
+      if verbunden {
+        List(namen, id: \.self, selection: $auswahl) { name in
+          HStack {
+            Text(name).font(Schrift.normal).foregroundStyle(Theme.text)
+            Spacer()
+            if art == .mic, let kette = ketten.kette(fuer: name) {
+              Text("⛓ \(kette)").font(Schrift.klein).foregroundStyle(Theme.accent)
+            }
+            if name == aktuell {
+              Text("Current").font(Schrift.klein).foregroundStyle(Theme.meterValue)
+            }
+          }
+        }
+        // Doppelklick = Use; Rechtsklick-Menü mit Use
+        .contextMenu(forSelectionType: String.self) { auswahlen in
+          if let n = auswahlen.first { Button("Use") { laden(n) } }
+        } primaryAction: { auswahlen in
+          if let n = auswahlen.first { laden(n) }
+        }
+        .listStyle(.inset(alternatesRowBackgrounds: true))
+        .scrollContentBackground(.hidden)
+
+        if art == .mic { kettenZeile }
+      } else {
+        Spacer()
+        Text("Radio nicht verbunden").font(Schrift.normal).foregroundStyle(Theme.textDim)
+        Spacer()
+      }
+    }
+    .frame(minWidth: 420, minHeight: 360)
+    .background(Theme.window)
+    .sheet(isPresented: $zeigeNeu) { neuBlatt }
+    .confirmationDialog(frageText, isPresented: Binding(get: { frage != nil }, set: { if !$0 { frage = nil } }), titleVisibility: .visible) {
+      switch frage {
+      case .speichern(let n): Button("Speichern") { senden("save", n) }
+      case .loeschen(let n): Button("Löschen", role: .destructive) { senden("delete", n); auswahl = nil }
+      case .zuruecksetzen(let n): Button("Zurücksetzen", role: .destructive) { senden("reset", n) }
+      case nil: EmptyView()
+      }
+      Button("Abbrechen", role: .cancel) {}
+    }
+  }
+
+  /// Mic-Profile: Audiokette für das ausgewählte Profil festlegen
+  private var kettenZeile: some View {
+    HStack(spacing: Abstand.s) {
+      Text("Audiokette").font(Schrift.normal).foregroundStyle(Theme.textDim)
+      if let profil = auswahl {
+        Picker("", selection: Binding(
+          get: { ketten.kette(fuer: profil) ?? "" },
+          set: { ketten.setze($0.isEmpty ? nil : $0, fuer: profil) }
+        )) {
+          Text("– keine (aktuelle bleibt) –").tag("")
+          if let k = ketten.kette(fuer: profil), !ketten.kettenNamen.contains(k) {
+            Text("\(k) (nicht gefunden)").tag(k)
+          }
+          ForEach(ketten.kettenNamen, id: \.self) { Text($0).tag($0) }
+        }
+        .labelsHidden()
+        Text("für „\(profil)“").font(Schrift.klein).foregroundStyle(Theme.textDim).lineLimit(1)
+      } else {
+        Text("Profil auswählen, um ihm eine Kette zuzuordnen").font(Schrift.klein).foregroundStyle(Theme.textDim)
+      }
+      Spacer()
+    }
+    .padding(Abstand.m)
+    .background(Theme.bar)
+  }
+
+  private var frageText: String {
+    switch frage {
+    case .speichern(let n):
+      n == aktuell ? "Aktuelle Einstellungen in „\(n)“ speichern?"
+                   : "Aktuelle Einstellungen in „\(n)“ speichern? Der bisherige Inhalt von „\(n)“ wird überschrieben."
+    case .loeschen(let n): "Profil „\(n)“ im Radio löschen?"
+    case .zuruecksetzen(let n): "Profil „\(n)“ auf die Werkseinstellung zurücksetzen?"
+    case nil: ""
+    }
+  }
+
+  /// Name für ein neues Profil (bzw. Kopie bei Global)
+  private var neuBlatt: some View {
+    VStack(alignment: .leading, spacing: Abstand.m) {
+      Text(art == .global ? "Aktuelle Einstellungen als neues Global-Profil speichern"
+                          : "Neues Profil aus den aktuellen Einstellungen")
+        .font(Schrift.normalFett)
+      TextField("Name", text: $neuerName)
+        .textFieldStyle(.roundedBorder)
+        .onSubmit(neuAnlegen)
+      if namen.contains(neuerName.trimmed) {
+        Text("Diesen Namen gibt es schon.").font(Schrift.klein).foregroundStyle(Theme.meterYellow)
+      }
+      HStack {
+        Spacer()
+        Button("Abbrechen") { zeigeNeu = false }.keyboardShortcut(.cancelAction)
+        Button("Anlegen", action: neuAnlegen)
+          .keyboardShortcut(.defaultAction)
+          .disabled(!neuGueltig)
+      }
+    }
+    .padding(Abstand.l)
+    .frame(width: 340)
+  }
+
+  private var neuGueltig: Bool {
+    let n = neuerName.trimmed
+    return !n.isEmpty && !namen.contains(n) && !n.contains("\"") && !n.contains("*") && !n.contains("^")
+  }
+
+  private func neuAnlegen() {
+    guard neuGueltig else { return }
+    let n = neuerName.trimmed
+    // Global: „save“ mit neuem Namen legt eine Kopie an; TX/Mic: „create“
+    senden(art == .global ? "save" : "create", n)
+    auswahl = n
+    zeigeNeu = false
+  }
+
+  private func laden(_ name: String) {
+    radio.sende("profile \(art.rawValue) load \"\(name)\"")
+  }
+
+  private func senden(_ befehl: String, _ name: String) {
+    radio.sende("profile \(art.befehlsWort) \(befehl) \"\(name)\"")
+  }
+}
+
+private extension String {
+  var trimmed: String { trimmingCharacters(in: .whitespaces) }
+}

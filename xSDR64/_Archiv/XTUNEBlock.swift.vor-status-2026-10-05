@@ -1,0 +1,161 @@
+import SwiftUI
+
+/// Inhalt des xTUNE-Blocks: eigener Koppler (Christian-Koppler über LAN),
+/// gesteuert über xTune64. NOCH ATTRAPPE: zeigt feste Werte; geplant ist nur die Zustandsanzeige
+/// aus xTune64 (Entscheidung 04.10.: Bedienung bleibt in xTune64).
+struct XTUNEBlock: View {
+  // feste Beispielwerte, bis xTune64 seinen Zustand meldet
+  @State private var connected = false
+  @State private var address = "192.168.2.107:54123"
+  @State private var valueL = 42  // Spulen-Stufe 0…127
+  @State private var valueC = 118  // Kondensator-Stufe 0…255
+  @State private var highPass = true  // H/T-Pass: true = H, false = T
+  @State private var swr: Double? = nil  // nil = nicht gemessen (nur beim Senden)
+  @State private var frequency = 14_200_000  // Hz – Frequenz, auf die der Koppler steht
+
+  @State private var autoOn = true  // Koppler folgt der Frequenz aus der Tabelle
+  @State private var bypassOn = false
+  @State private var showManual = false  // Popup für L/C von Hand
+
+  var body: some View {
+    VStack(spacing: 0) {
+      // Verbindung zum Koppler
+      HStack(spacing: Abstand.s) {
+        Circle()
+          .fill(connected ? Theme.meterValue : Theme.meterRed)
+          .frame(width: 8, height: 8)
+        Text(connected ? "verbunden" : "nicht verbunden")
+        Spacer(minLength: 0)
+        Text(address)
+          .font(Schrift.zahl)
+          .foregroundStyle(Theme.textDim)
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // Aktuelle Einstellung: L – C – H/T in eingelassenen Feldern
+      HStack(spacing: Abstand.s) {
+        valueBox("L", "\(valueL)")
+        valueBox("C", "\(valueC)")
+        valueBox("H/T", highPass ? "H" : "T")
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // SWR – leer, solange nicht gesendet wird (keine erfundene 1,00)
+      HStack(spacing: Abstand.s) {
+        Text("SWR:")
+          .frame(width: 78, alignment: .leading)
+        Spacer(minLength: 0)
+        Text(swr.map { String(format: "1 : %.2f", $0) } ?? "1 :  – –")
+          .font(Schrift.gross.monospacedDigit())
+          .foregroundStyle(swrColor)
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      // Bedienung
+      HStack(spacing: Abstand.xs) {
+        Button("AUTO") { autoOn.toggle() }
+          .buttonStyle(KnopfStil(art: autoOn ? .an : .aus, breite: 60))
+        Button("BYP") { bypassOn.toggle() }
+          .buttonStyle(KnopfStil(art: bypassOn ? .an : .aus, breite: 60))
+        Spacer(minLength: 0)
+        Button("MAN") { showManual.toggle() }
+          .buttonStyle(KnopfStil(art: showManual ? .an : .aus, breite: 60))
+          .popover(isPresented: $showManual, arrowEdge: .top) {
+            manualPopup
+          }
+        Button("MEM") { /* später: L/C für diese Frequenz in die Tabelle */ }
+          .buttonStyle(KnopfStil(breite: 60))
+      }
+      .frame(height: Mass.zeilenHoehe)
+
+      Furche().padding(.vertical, Abstand.xs)
+
+      // Band + Frequenz des Kopplers – zum Abgleich mit der Frequenz im RX-Block
+      HStack(spacing: Abstand.s) {
+        Text("Band:")
+          .frame(width: 78, alignment: .leading)
+        Text(Self.band(frequency))
+          .font(Schrift.normalFett)
+        Spacer(minLength: 0)
+        Text(RXBlock.format(frequency))
+          .font(Schrift.zahl)
+          .zahlFeld()
+      }
+      .frame(height: Mass.zeilenHoehe)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.s)
+    .foregroundStyle(Theme.text)
+  }
+
+  /// Popup: L und C von Hand stellen, H/T umschalten
+  private var manualPopup: some View {
+    VStack(spacing: 0) {
+      stepRow("L", value: $valueL, range: 0...127)
+      stepRow("C", value: $valueC, range: 0...255)
+      HStack {
+        Text("H/T-Pass")
+        Spacer(minLength: 0)
+        Button("H") { highPass = true }
+          .buttonStyle(KnopfStil(art: highPass ? .an : .aus, breite: 40))
+        Button("T") { highPass = false }
+          .buttonStyle(KnopfStil(art: highPass ? .aus : .an, breite: 40))
+      }
+      .frame(height: Mass.zeilenHoehe)
+    }
+    .font(Schrift.normal)
+    .padding(Abstand.m)
+    .frame(width: 280)
+  }
+
+  /// Eingelassenes Feld: Bezeichnung links klein, Wert rechts
+  private func valueBox(_ title: String, _ value: String) -> some View {
+    HStack(spacing: Abstand.xs) {
+      Text(title)
+        .font(Schrift.klein)
+        .foregroundStyle(Theme.textDim)
+      Spacer(minLength: 0)
+      Text(value)
+        .font(Schrift.zahl)
+    }
+    .zahlFeld()
+    .frame(maxWidth: .infinity)
+  }
+
+  /// Zeile im Popup: Name – Schieberegler – Wert (ganze Stufen)
+  private func stepRow(_ title: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
+    HStack(spacing: Abstand.s) {
+      Text(title)
+        .frame(width: 20, alignment: .leading)
+      RimuSlider(
+        value: Binding(get: { Double(value.wrappedValue) },
+                       set: { value.wrappedValue = Int($0.rounded()) }),
+        range: Double(range.lowerBound)...Double(range.upperBound))
+      Text("\(value.wrappedValue)")
+        .font(Schrift.zahl)
+        .frame(width: 34, alignment: .trailing)
+    }
+    .frame(height: Mass.zeilenHoehe)
+  }
+
+  /// Frequenz → Band in Metern. Außerhalb der Tabelle: Wellenlänge gerundet
+  static func band(_ hz: Int) -> String {
+    let mhz = Double(hz) / 1_000_000
+    let bands: [(ClosedRange<Double>, String)] = [
+      (1.8...2.0, "160 m"), (3.5...4.0, "80 m"), (5.25...5.45, "60 m"),
+      (7.0...7.3, "40 m"), (10.1...10.15, "30 m"), (14.0...14.35, "20 m"),
+      (18.068...18.168, "17 m"), (21.0...21.45, "15 m"), (24.89...24.99, "12 m"),
+      (28.0...29.7, "10 m"), (50.0...54.0, "6 m"),
+    ]
+    if let hit = bands.first(where: { $0.0.contains(mhz) }) { return hit.1 }
+    return mhz > 0 ? "≈ \(Int((300 / mhz).rounded())) m" : "–"
+  }
+
+  /// Wie in xTune64: grün bis 1,5 – orange bis 1,8 (ACOM riegelt ab) – darüber rot
+  private var swrColor: Color {
+    guard let s = swr else { return Theme.textDim }
+    if s <= 1.5 { return Theme.meterValue }
+    if s <= 1.8 { return .orange }
+    return Theme.meterRed
+  }
+}

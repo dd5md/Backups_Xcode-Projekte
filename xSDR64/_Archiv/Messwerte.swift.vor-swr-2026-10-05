@@ -1,0 +1,154 @@
+import ApiPackage
+import Foundation
+import Observation
+import os
+import Synchronization
+
+// MARK: - Empfang (UDP-Empfangs-Queue)
+
+/// Nimmt die Messwert-Pakete des Radios an (je Messwert 4 Byte: Nummer u16, Wert i16, Big Endian)
+/// und reicht sie gesammelt an den Haupt-Thread weiter – höchstens ein Auftrag gleichzeitig unterwegs.
+nonisolated final class MessEmpfang: @unchecked Sendable {
+  static let shared = MessEmpfang()
+
+  private let offen = OSAllocatedUnfairLock(initialState: (werte: [UInt16: Int16](), unterwegs: false))
+  /// Zeitpunkt des letzten Messwert-Pakets (Uptime in ns) – der Wachhund erkennt daran,
+  /// ob das Radio noch Daten schickt (die Messwerte kommen ständig, mehrmals pro Sekunde)
+  private let letzteZeit = Atomic<UInt64>(0)
+
+  /// Sekunden seit dem letzten Paket (sehr groß, falls noch keins kam)
+  var sekundenSeitLetztemPaket: Double {
+    let t = letzteZeit.load(ordering: .relaxed)
+    guard t > 0 else { return .infinity }
+    return Double(DispatchTime.now().uptimeNanoseconds &- t) / 1e9
+  }
+
+  func zeitZuruecksetzen() { letzteZeit.store(DispatchTime.now().uptimeNanoseconds, ordering: .relaxed) }
+
+  var rueckruf: @Sendable ([UInt8]) -> Void {
+    { [self] payload in self.paket(payload) }
+  }
+
+  func paket(_ p: [UInt8]) {
+    letzteZeit.store(DispatchTime.now().uptimeNanoseconds, ordering: .relaxed)
+    var neu = [UInt16: Int16]()
+    var i = 0
+    while i + 3 < p.count {
+      let id = UInt16(p[i]) << 8 | UInt16(p[i + 1])
+      let wert = Int16(bitPattern: UInt16(p[i + 2]) << 8 | UInt16(p[i + 3]))
+      neu[id] = wert
+      i += 4
+    }
+    let fertig = neu  // feste Kopie für den Lock-Block (Swift 6: keine veränderliche Variable hineinreichen)
+    let losschicken = offen.withLock { z -> Bool in
+      z.werte.merge(fertig) { _, n in n }
+      if z.unterwegs { return false }
+      z.unterwegs = true
+      return true
+    }
+    guard losschicken else { return }
+    DispatchQueue.main.async {
+      let werte = self.offen.withLock { z -> [UInt16: Int16] in
+        let w = z.werte
+        z.werte.removeAll(keepingCapacity: true)
+        z.unterwegs = false
+        return w
+      }
+      MessModell.shared.uebernimm(werte)
+    }
+  }
+}
+
+// MARK: - Modell für die Oberfläche
+
+@MainActor
+@Observable
+final class MessModell {
+  static let shared = MessModell()
+  private init() {}
+
+  /// Umgerechnete Werte je Messwert-Nummer (dBm, dBFS, Volt, °C, SWR …)
+  private(set) var werte = [UInt16: Float]()
+
+  private var api: ApiModel { RadioVerbindung.shared.api }
+
+  func uebernimm(_ roh: [UInt16: Int16]) {
+    for (id, r) in roh {
+      guard let meter = api.meters.first(where: { $0.id == UInt32(id) }) else { continue }
+      let v = Float(r)
+      switch meter.units {
+      case "dbm", "dbfs", "db", "swr": werte[id] = v / 128
+      case "volts", "amps": werte[id] = v / 256
+      case "degc", "degf": werte[id] = v / 64
+      default: werte[id] = v
+      }
+    }
+  }
+
+  /// Wert eines Messwerts nach Name (z. B. "swr"), bei Slice-Messwerten mit Gruppe = Slice-Nummer
+  func wert(_ name: String, gruppe: String? = nil) -> Float? {
+    guard RadioVerbindung.shared.istVerbunden else { return nil }
+    guard let meter = api.meters.first(where: { $0.name == name && (gruppe == nil || $0.group == gruppe) })
+    else { return nil }
+    return werte[UInt16(truncatingIfNeeded: meter.id)]
+  }
+
+  /// Alle Messwerte einer Einheit (z. B. alle Temperaturen) als Text „NAME: Wert“ – für Tooltips
+  func alle(einheitBeginnt praefix: String, format: String) -> String {
+    guard RadioVerbindung.shared.istVerbunden else { return "Radio nicht verbunden" }
+    let liste = api.meters
+      .filter { $0.units.lowercased().hasPrefix(praefix) }
+      .sorted { $0.name < $1.name }
+      .compactMap { m -> String? in
+        guard let w = werte[UInt16(truncatingIfNeeded: m.id)] else { return nil }
+        return "\(m.name.uppercased()): " + String(format: format, w)
+      }
+    return liste.isEmpty ? "keine Messwerte gemeldet" : liste.joined(separator: "\n")
+  }
+
+  // MARK: - Fertige Werte für die Anzeigen
+
+  /// Empfangspegel des Slice in dBm
+  func sMeterDbm(_ slice: Slice?) -> Float? {
+    guard let slice else { return nil }
+    return wert("level", gruppe: String(slice.id))
+  }
+
+  /// dBm → Zeigerstellung 0…1 der S-Skala (S1 = −121 dBm … S9 = −73 dBm bei 0,6 … S9+40 bei 1,0)
+  static func sStellung(_ dbm: Float) -> Double {
+    if dbm <= -73 { return Double(max(0, (dbm + 121) / 48 * 0.6)) }
+    return Double(min(1, 0.6 + (dbm + 73) / 40 * 0.4))
+  }
+
+  /// Vorlaufleistung in Watt
+  var leistungWatt: Float? {
+    guard let meter = api.meters.first(where: { $0.name == "fwdpwr" }),
+          let v = werte[UInt16(truncatingIfNeeded: meter.id)] else { return nil }
+    return meter.units == "dbm" ? pow(10, (v - 30) / 10) : v
+  }
+
+  var swr: Float? { wert("swr") }
+  var micPegel: Float? { txWert("mic") }        // dBFS, Mittelwert (Balken)
+  var micSpitze: Float? { txWert("micpeak") }   // dBFS, echter Spitzenpegel (Strich)
+
+  /// Sende-Messwert: gibt es mehrere gleichen Namens, den der Quelle „TX-“ nehmen
+  /// (vorher: der erste beliebige – evtl. ein nicht mehr aktualisierter → Strich „klebte“)
+  private func txWert(_ name: String) -> Float? {
+    guard RadioVerbindung.shared.istVerbunden else { return nil }
+    let passend = api.meters.filter { $0.name.lowercased() == name }
+    let meter = passend.first { $0.source.uppercased().hasPrefix("TX") } ?? passend.first
+    guard let meter else { return nil }
+    return werte[UInt16(truncatingIfNeeded: meter.id)]
+  }
+
+  /// Einmal ins Diagnose-Log: alle Mikrofon-Messwerte mit Quelle, Einheit, Bereich
+  func micMesswerteProtokollieren() {
+    for m in api.meters where m.name.lowercased().contains("mic") || m.name.lowercased().contains("comp")
+      || m.units.lowercased() == "volts" || m.units.lowercased().hasPrefix("deg") {
+      Diagnose.log("Messwert \(m.id): \(m.name) Quelle=\(m.source) Einheit=\(m.units) \(m.low)…\(m.high) – \(m.desc)")
+    }
+  }
+  var spannung: Float? { wert("+13.8b") }     // Volt hinter der Sicherung
+  var spannungA: Float? { wert("+13.8a") }    // Volt am Eingang (vor der Sicherung) – zum Vergleich
+  var paTemperatur: Float? { wert("patemp") } // °C
+}

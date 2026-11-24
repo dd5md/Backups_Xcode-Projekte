@@ -1,0 +1,156 @@
+import ApiPackage
+import Foundation
+import Observation
+
+/// Verbindung zum FlexRadio über K3TZRs ApiPackage (eigene Kopie in Pakete/).
+/// Eine gemeinsame Instanz für die ganze App: sucht Radios im lokalen Netz,
+/// verbindet als Gui-Client und stellt die Werte für die Oberfläche bereit.
+@MainActor
+@Observable
+final class RadioVerbindung {
+  static let shared = RadioVerbindung()
+
+  /// Das Datenmodell aus dem ApiPackage (Radio, Slices, Meter …)
+  let api = ApiModel()
+
+  enum Zustand: Equatable {
+    case getrennt
+    case verbinde
+    case verbunden
+    case fehler(String)
+  }
+
+  private(set) var zustand: Zustand = .getrennt
+  private var gestartet = false
+
+  // Einstellungen, die über Neustarts erhalten bleiben
+  private let speicher = UserDefaults.standard
+  private let kennungKey = "radioClientKennung"
+  private let letztesRadioKey = "radioLetztesRadio"
+  private let leiseGesetztKey = "radioErsteVerbindungLeise"
+  private static let autoKey = "radioAutomatischVerbinden"
+
+  /// Beim Start das zuletzt benutzte Radio automatisch verbinden (Häkchen im Radio-Popup)
+  var automatischVerbinden: Bool = UserDefaults.standard.object(forKey: RadioVerbindung.autoKey) as? Bool ?? true {
+    didSet { speicher.set(automatischVerbinden, forKey: Self.autoKey) }
+  }
+
+  /// Feste Kennung von xSDR64 beim Radio. Bleibt immer gleich, damit das Radio
+  /// beim Verbinden die letzten Einstellungen (auch die Lautstärke) wieder einsetzt.
+  private var clientKennung: UUID {
+    if let text = speicher.string(forKey: kennungKey), let id = UUID(uuidString: text) { return id }
+    let neu = UUID()
+    speicher.set(neu.uuidString, forKey: kennungKey)
+    return neu
+  }
+
+  static let stationName = "xSDR64"
+  private let discoveryPort = 4992
+  private let mtu = 1250
+
+  private init() {}
+
+  // MARK: - Abfragen für die Oberfläche
+
+  /// Alle im Netz gefundenen Radios
+  var gefundeneRadios: [Radio] { api.radios }
+
+  /// Das verbundene Radio (nur wenn verbunden)
+  var radio: Radio? {
+    guard zustand == .verbunden, let id = api.activeSelection?.radioId else { return nil }
+    return api.radios.first { $0.id == id }
+  }
+
+  var istVerbunden: Bool { zustand == .verbunden }
+
+  /// Anzeigename eines Radios: Spitzname, sonst Modell
+  static func name(_ radio: Radio) -> String {
+    radio.packet.nickname.isEmpty ? radio.packet.model : radio.packet.nickname
+  }
+
+  // MARK: - Ablauf
+
+  /// Beim App-Start einmal aufrufen: Suche im lokalen Netz starten
+  /// und – falls bekannt – das zuletzt benutzte Radio verbinden.
+  func starten() {
+    guard !gestartet else { return }
+    gestartet = true
+    api.listenerLocal = ListenerLocal(api, port: discoveryPort)
+    // Spektrum-Daten vom Radio direkt in den Sammler (UDP-Queue)
+    api.streamModel?.onPanadapterPayload = SpektrumEmpfang.shared.panadapterRueckruf
+    api.streamModel?.onWaterfallPayload = WasserfallEmpfang.shared.rueckruf
+    api.streamModel?.onMeterPayload = MessEmpfang.shared.rueckruf
+    api.streamModel?.onDaxRxAudioPayload = MicNetzEmpfang.verteiler   // Mac-Audio + Netz-Mikrofon
+    Task {
+      do {
+        try await api.listenerLocal?.start(port: discoveryPort)
+      } catch {
+        zustand = .fehler("Suche im Netz nicht möglich")
+        return
+      }
+      if automatischVerbinden { await letztesRadioVerbinden() }
+    }
+  }
+
+  /// Wartet bis zu 10 s, ob das zuletzt benutzte Radio auftaucht, und verbindet dann.
+  private func letztesRadioVerbinden() async {
+    guard let letztes = speicher.string(forKey: letztesRadioKey) else { return }
+    for _ in 0..<20 {
+      if let radio = api.radios.first(where: { $0.packet.serial == letztes }) {
+        await verbinden(radio)
+        return
+      }
+      try? await Task.sleep(for: .milliseconds(500))
+    }
+  }
+
+  func verbinden(_ radio: Radio) async {
+    if zustand == .verbunden || zustand == .verbinde { await trennen() }
+    zustand = .verbinde
+    let auswahl = PickerSelection(radio.id, Self.stationName)
+    api.activeSelection = auswahl
+    do {
+      try await api.connect(
+        selection: auswahl,
+        isGui: true,
+        programName: "xSDR64",
+        mtuValue: mtu,
+        guiClientId: clientKennung)
+      zustand = .verbunden
+      speicher.set(radio.packet.serial, forKey: letztesRadioKey)
+      await ersteVerbindungLeise()
+      MacAudio.shared.anwenden()   // war „Audio: Mac“ gewählt, Ton gleich wieder holen
+      Loopback.shared.anwenden()   // Loopback für Aufnahmen wieder einschalten, falls aktiv
+      // Sicherheit: falls xSDR64 zuletzt mit Sendeweg „Audiokette übers Netz“ beendet wurde,
+      // stünde das Radio noch auf DAX – dann käme beim Senden kein Mikrofon-Ton
+      sende("transmit set dax=0")
+    } catch {
+      await api.disconnect()
+      zustand = .fehler("Verbindung fehlgeschlagen")
+    }
+  }
+
+  func trennen() async {
+    await api.disconnect()
+    zustand = .getrennt
+    MacAudio.shared.anwenden()   // stoppt die Wiedergabe am Mac
+    MicNetz.shared.stoppen()
+    TxNetz.shared.stoppen()
+    Loopback.shared.anwenden()
+  }
+
+  /// Nur beim allerersten Verbinden: eigene Slices leise stellen,
+  /// damit nichts aus dem Lautsprecher brüllt (Radio legt neue Slices mit Standard-Lautstärke an).
+  private func ersteVerbindungLeise() async {
+    guard !speicher.bool(forKey: leiseGesetztKey) else { return }
+    // kurz warten, bis das Radio die Slices gemeldet hat
+    for _ in 0..<10 where api.slices.isEmpty {
+      try? await Task.sleep(for: .milliseconds(300))
+    }
+    let eigene = api.slices.filter { $0.clientHandle == api.connectionHandle }
+    for slice in eigene {
+      api.sendTcp("slice set \(slice.id) audio_level=10")
+    }
+    speicher.set(true, forKey: leiseGesetztKey)
+  }
+}
